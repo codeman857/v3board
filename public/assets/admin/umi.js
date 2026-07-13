@@ -106490,7 +106490,17 @@
                     value: "httpupgrade"
                 }, "HTTPUpgrade"), e.protocol != "trojan" && y.a.createElement(N["a"].Option, {
                     value: "xhttp"
-                }, "XHTTP")))), e.protocol == "anytls" && y.a.createElement("div", {
+                }, "XHTTP")))), y.a.createElement("div", {
+                    className: "form-group"
+                }, e.network != null && (e.network == "xhttp" || e.network == "ws" || e.network == "grpc") && y.a.createElement("label", null, "\u4fe1\u4efb\u7684XFF\u5934\u90e8(\u83b7\u53d6\u771f\u5b9eIP)"), y.a.createElement(N["a"], {
+                    mode: "tags",
+                    value: e.trusted_x_forwarded_for || [],
+                    style: {
+                        width: "100%"
+                    },
+                    placeholder: "\u5e38\u89c1\u5934\u90e8:X-Forwarded-For CF-Connecting-IP X-Real-IP",
+                    onChange: e=>this.formChange("trusted_x_forwarded_for", e.length > 0 ? e: null)
+                })), e.protocol == "anytls" && y.a.createElement("div", {
                     className: "row"
                 }, y.a.createElement("div", {
                     className: "form-group col-md-12 col-xs-12"
