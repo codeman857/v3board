@@ -6037,6 +6037,52 @@
                     placeholder: "\u8bf7\u8f93\u5165",
                     defaultValue: r.show_subscribe_expire,
                     onChange: e=>this.set("safe", "show_subscribe_expire", e.target.value)
+                })) : "", f.a.createElement(m, {
+                    title: "\u8ba2\u9605\u52a0\u5bc6",
+                    description: "\u5f00\u542f\u540e\u8ba2\u9605\u5185\u5bb9\u5c06\u4f7f\u7528 AES-CBC \u5bf9\u79f0\u52a0\u5bc6\u540e\u8f93\u51fa\uff08Base64\uff09\u3002IV \u4f18\u5148\u4f7f\u7528\u8bf7\u6c42\u5934 X-IV\uff08\u6bcf\u6b21\u968f\u673a\uff09\uff0c\u672a\u643a\u5e26\u65f6\u4f7f\u7528\u4e0b\u65b9\u914d\u7f6e\u7684\u56fa\u5b9a IV\uff1b\u5bc6\u94a5\u6216 IV \u7f3a\u5931\u5219\u4e0d\u52a0\u5bc6\u3002"
+                }, f.a.createElement(l["a"], {
+                    checked: parseInt(r.subscribe_encrypt_enable),
+                    onChange: e=>this.set("subscribe", "subscribe_encrypt_enable", e ? 1 : 0)
+                })), parseInt(r.subscribe_encrypt_enable) ? f.a.createElement(m, {
+                    isChildren: !0,
+                    title: "\u52a0\u5bc6\u5bc6\u94a5\uff08Key\uff09",
+                    description: f.a.createElement("span", null, "\u4f7f\u7528\u4e2d\u95f4\u4ef6\u65f6\u5fc5\u987b\u586b\u5165\u4e2d\u95f4\u4ef6\u5bc6\u94a5\uff08\u987b\u6070\u597d16\u4f4d\uff0c\u8d70 AES-128\uff09\uff1b\u672a\u4f7f\u7528\u4e2d\u95f4\u4ef6\u65f6\u586b\u8ba2\u9605\u52a0\u5bc6\u5bc6\u94a5\uff0c\u63a8\u835032\u4f4d\uff08\u8d70 AES-256\uff09\u3002\u5bc6\u94a5\u9700\u4e0e\u5ba2\u6237\u7aef\u603b\u63a7\u4e2d\u914d\u7f6e\u7684\u4e00\u81f4\uff0c\u53ef", f.a.createElement("a", { href: "https://www.bejson.com/math/hex_gen/", target: "_blank", rel: "noopener noreferrer" }, "\u70b9\u6b64\u5728\u7ebf\u751f\u6210"), "\u3002")
+                }, f.a.createElement("input", {
+                    type: "text",
+                    className: "form-control",
+                    placeholder: "\u8bf7\u8f93\u5165\u52a0\u5bc6\u5bc6\u94a5",
+                    defaultValue: r.subscribe_encrypt_key,
+                    onChange: e=>this.set("subscribe", "subscribe_encrypt_key", e.target.value)
+                })) : "", parseInt(r.subscribe_encrypt_enable) ? f.a.createElement(m, {
+                    isChildren: !0,
+                    title: "\u56fa\u5b9a IV\uff08\u53ef\u9009\uff09",
+                    description: f.a.createElement("span", null, "\u8bf7\u6c42\u672a\u643a\u5e26 X-IV \u5934\u65f6\u4f7f\u7528\u6b64\u56fa\u5b9a IV \u52a0\u5bc6\uff0cAtlas App \u53ef\u4e0d\u586b\u3002\u5fc5\u987b\u4e3a16\u4f4d\uff0c\u53ef", f.a.createElement("a", { href: "https://www.bejson.com/math/hex_gen/", target: "_blank", rel: "noopener noreferrer" }, "\u70b9\u6b64\u5728\u7ebf\u751f\u6210"), "\u3002")
+                }, f.a.createElement("input", {
+                    type: "text",
+                    className: "form-control",
+                    placeholder: "\u8bf7\u8f93\u5165\u56fa\u5b9aIV\uff08\u53ef\u7559\u7a7a\uff09",
+                    defaultValue: r.subscribe_encrypt_iv,
+                    onChange: e=>this.set("subscribe", "subscribe_encrypt_iv", e.target.value)
+                })) : "", parseInt(r.subscribe_encrypt_enable) ? f.a.createElement(m, {
+                    isChildren: !0,
+                    title: "User-Agent \u8fc7\u6ee4",
+                    description: "\u4ec5\u5f53\u62c9\u53d6\u8ba2\u9605\u8bf7\u6c42\u7684 User-Agent \u5305\u542b\u4ee5\u4e0b\u4efb\u4e00\u5173\u952e\u8bcd\u65f6\u624d\u8fd4\u56de\u52a0\u5bc6\u5185\u5bb9\uff08\u4e0d\u533a\u5206\u5927\u5c0f\u5199\uff09\uff0c\u591a\u4e2a\u5173\u952e\u8bcd\u7528\u82f1\u6587\u9017\u53f7\u6216\u6362\u884c\u5206\u9694\u3002\u7559\u7a7a\u8868\u793a\u5bf9\u6240\u6709\u5ba2\u6237\u7aef\u52a0\u5bc6\u3002"
+                }, f.a.createElement("textarea", {
+                    rows: "2",
+                    className: "form-control",
+                    placeholder: "\u5982\uff1aAtlasApp,MyClient/1.0\uff08\u7559\u7a7a\u5219\u5168\u90e8\u52a0\u5bc6\uff09",
+                    defaultValue: r.subscribe_encrypt_ua,
+                    onChange: e=>this.set("subscribe", "subscribe_encrypt_ua", e.target.value)
+                })) : "", parseInt(r.subscribe_encrypt_enable) ? f.a.createElement(m, {
+                    isChildren: !0,
+                    title: "\u5957\u9910\u8fc7\u6ee4",
+                    description: "\u4ec5\u5bf9\u6307\u5b9a\u5957\u9910\u7684\u7528\u6237\u8fd4\u56de\u52a0\u5bc6\u8ba2\u9605\uff0c\u586b\u5199\u5957\u9910ID\uff0c\u591a\u4e2a\u7528\u82f1\u6587\u9017\u53f7\u5206\u9694\u3002\u7559\u7a7a\u8868\u793a\u5bf9\u6240\u6709\u5957\u9910\u52a0\u5bc6\u3002"
+                }, f.a.createElement("textarea", {
+                    rows: "2",
+                    className: "form-control",
+                    placeholder: "\u5982\uff1a1,2,5\uff08\u7559\u7a7a\u5219\u5168\u90e8\u5957\u9910\u52a0\u5bc6\uff09",
+                    defaultValue: r.subscribe_encrypt_plan_ids,
+                    onChange: e=>this.set("subscribe", "subscribe_encrypt_plan_ids", e.target.value)
                 })) : "")), f.a.createElement(s["a"].TabPane, {
                     tab: "\u5145\u503c",
                     key: "deposit"
@@ -21150,6 +21196,13 @@
                         href: "/order",
                         icon: o.a.createElement("i", {
                             className: "nav-main-link-icon si si-list"
+                        })
+                    }, {
+                        title: "\u63d0\u524d\u7eed\u671f\u8bb0\u5f55",
+                        type: "item",
+                        href: "/newPeriodLog",
+                        icon: o.a.createElement("i", {
+                            className: "nav-main-link-icon si si-refresh"
                         })
                     }, {
                         title: "\u4f18\u60e0\u5238\u7ba1\u7406",
@@ -70922,6 +70975,9 @@
                 }),
                 _.a.push("/order")
             }
+            newPeriodLogFilter(e) {
+                _.a.push("/newPeriodLog?email=" + encodeURIComponent(e || ""))
+            }
             resetSecret(e) {
                 var t = this;
                 p["a"].confirm({
@@ -71100,6 +71156,10 @@
                             }, g.a.createElement("a", null, g.a.createElement(u["a"], {
                                 type: "usergroup-add"
                             }), " TA\u7684\u9080\u8bf7")), g.a.createElement(c["a"].Item, {
+                                onClick: ()=>this.newPeriodLogFilter(t.email)
+                            }, g.a.createElement("a", null, g.a.createElement(u["a"], {
+                                type: "reload"
+                            }), " TA\u7684\u63d0\u524d\u7eed\u671f\u8bb0\u5f55")), g.a.createElement(c["a"].Item, {
                                 onContextMenu: e=>{
                                     e.stopPropagation()
                                 }
@@ -82366,6 +82426,16 @@
           , l = n("Hg0r")
           , c = l["c"].ConnectedRouter
           , u = [{
+            path: "/newPeriodLog",
+            exact: !0,
+            component: function(e) {
+                return i.a.createElement(n("Bl7J")["a"], Object.assign({}, e, {
+                    title: "\u63d0\u524d\u7eed\u671f\u8bb0\u5f55"
+                }), i.a.createElement("div", {
+                    id: "npl-root"
+                }))
+            }
+        }, {
             path: "/config/payment",
             exact: !0,
             component: n("eIZb").default

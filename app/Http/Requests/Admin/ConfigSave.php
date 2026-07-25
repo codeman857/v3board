@@ -55,6 +55,11 @@ class ConfigSave extends FormRequest
         'show_info_to_server_enable' => 'in:0,1',
         'show_subscribe_method' => 'in:0,1,2',
         'show_subscribe_expire' => 'nullable|integer',
+        'subscribe_encrypt_enable' => 'in:0,1',
+        'subscribe_encrypt_key' => 'nullable|string',
+        'subscribe_encrypt_iv' => 'nullable|string',
+        'subscribe_encrypt_ua' => 'nullable|string',
+        'subscribe_encrypt_plan_ids' => 'nullable|string',
         // server
         'server_api_url' => 'nullable|string',
         'server_token' => 'nullable|min:16',

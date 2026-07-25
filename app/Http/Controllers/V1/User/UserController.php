@@ -9,6 +9,7 @@ use App\Http\Requests\User\UserTransfer;
 use App\Http\Requests\User\UserUpdate;
 use App\Models\Giftcard;
 use App\Models\InviteCode;
+use App\Models\NewPeriodLog;
 use App\Models\Order;
 use App\Models\Plan;
 use App\Models\Ticket;
@@ -133,6 +134,9 @@ class UserController extends Controller
                 $reset_day = $reset_period;
             }
             if ($user->expired_at !== null && ($reset_period + 1) * 86400 < $user->expired_at - time()) {
+                $oldExpiredAt = $user->expired_at;
+                $oldU = $user->u;
+                $oldD = $user->d;
                 if (!$user->update(
                     [
                         'expired_at' => $user->expired_at - $reset_day * 86400,
@@ -140,6 +144,22 @@ class UserController extends Controller
                         'd' => 0
                     ]
                 )) {
+                    throw new \Exception(__('Save failed'));
+                }
+                try {
+                    NewPeriodLog::create([
+                        'user_id' => $user->id,
+                        'plan_id' => $user->plan_id,
+                        'deduct_days' => $reset_day,
+                        'old_expired_at' => $oldExpiredAt,
+                        'new_expired_at' => $oldExpiredAt - $reset_day * 86400,
+                        'u' => $oldU,
+                        'd' => $oldD,
+                        'transfer_enable' => $user->transfer_enable
+                    ]);
+                } catch (\Exception $e) {
+                    // 记录失败时整体回滚，但不把底层 SQL 错误回显给用户
+                    \Log::error('newPeriodLog create failed: ' . $e->getMessage());
                     throw new \Exception(__('Save failed'));
                 }
             } else {

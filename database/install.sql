@@ -586,4 +586,22 @@ CREATE TABLE `v2_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+CREATE TABLE IF NOT EXISTS `v2_new_period_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `plan_id` int(11) DEFAULT NULL,
+  `deduct_days` int(11) NOT NULL DEFAULT '0' COMMENT '扣除天数',
+  `old_expired_at` int(11) NOT NULL DEFAULT '0' COMMENT '原到期时间',
+  `new_expired_at` int(11) NOT NULL DEFAULT '0' COMMENT '新到期时间',
+  `u` bigint(20) NOT NULL DEFAULT '0' COMMENT '重置前已用上行',
+  `d` bigint(20) NOT NULL DEFAULT '0' COMMENT '重置前已用下行',
+  `transfer_enable` bigint(20) NOT NULL DEFAULT '0' COMMENT '当时流量配额',
+  `created_at` int(11) NOT NULL,
+  `updated_at` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 -- 2025-09-12 10:05:00

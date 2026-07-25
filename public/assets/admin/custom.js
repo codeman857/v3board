@@ -84,32 +84,32 @@
     if (!container) return;
 
     var html = '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;">' +
-      '<thead><tr style="background:#fafafa;text-align:left;">' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:22%;">UA 关键词</th>' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:22%;">匹配域名</th>' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:22%;">替换 IP</th>' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:22%;">备注</th>' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:12%;text-align:center;">操作</th>' +
+      '<thead><tr style="text-align:left;">' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:22%;">UA 关键词</th>' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:22%;">匹配域名</th>' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:22%;">替换 IP</th>' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:22%;">备注</th>' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:12%;text-align:center;">操作</th>' +
       '</tr></thead><tbody>';
 
     if (rules.length === 0) {
-      html += '<tr><td colspan="5" style="padding:16px;text-align:center;color:#999;border-bottom:1px solid #e8e8e8;">暂无规则，点击下方按钮添加</td></tr>';
+      html += '<tr><td colspan="5" style="padding:16px;text-align:center;color:#999;border-bottom:1px solid #eee;">暂无规则，点击下方按钮添加</td></tr>';
     } else {
       rules.forEach(function (rule, i) {
         html += '<tr data-index="' + i + '">' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;"><input type="text" class="drr-input" data-field="ua" data-index="' + i + '" value="' + escapeAttr(rule.ua) + '" placeholder="如 Atlas/1.0" /></td>' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;"><input type="text" class="drr-input" data-field="domain" data-index="' + i + '" value="' + escapeAttr(rule.domain) + '" placeholder="如 example.com" /></td>' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;"><input type="text" class="drr-input" data-field="ip" data-index="' + i + '" value="' + escapeAttr(rule.ip) + '" placeholder="如 1.2.3.4" /></td>' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;"><input type="text" class="drr-input" data-field="remark" data-index="' + i + '" value="' + escapeAttr(rule.remark || '') + '" placeholder="可选" /></td>' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;text-align:center;"><button class="drr-del-btn" data-index="' + i + '" style="color:#ff4d4f;background:none;border:1px solid #ff4d4f;border-radius:4px;padding:2px 12px;cursor:pointer;font-size:13px;">删除</button></td>' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;"><input type="text" class="drr-input" data-field="ua" data-index="' + i + '" value="' + escapeAttr(rule.ua) + '" placeholder="如 Atlas/1.0" /></td>' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;"><input type="text" class="drr-input" data-field="domain" data-index="' + i + '" value="' + escapeAttr(rule.domain) + '" placeholder="如 example.com" /></td>' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;"><input type="text" class="drr-input" data-field="ip" data-index="' + i + '" value="' + escapeAttr(rule.ip) + '" placeholder="如 1.2.3.4" /></td>' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;"><input type="text" class="drr-input" data-field="remark" data-index="' + i + '" value="' + escapeAttr(rule.remark || '') + '" placeholder="可选" /></td>' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:center;"><button class="drr-del-btn" data-index="' + i + '" style="color:#ff4d4f;background:none;border:1px solid #ff4d4f;border-radius:4px;padding:2px 12px;cursor:pointer;font-size:13px;">删除</button></td>' +
           '</tr>';
       });
     }
 
     html += '</tbody></table>';
     html += '<div style="display:flex;gap:8px;">' +
-      '<button id="drr-add-btn" style="background:#1890ff;color:#fff;border:none;border-radius:4px;padding:6px 20px;cursor:pointer;font-size:14px;">+ 添加规则</button>' +
-      '<button id="drr-save-btn" style="background:#52c41a;color:#fff;border:none;border-radius:4px;padding:6px 20px;cursor:pointer;font-size:14px;">' + (saving ? '保存中...' : '保存') + '</button>' +
+      '<button id="drr-add-btn" class="btn btn-sm btn-outline-primary">+ 添加规则</button>' +
+      '<button id="drr-save-btn" class="btn btn-sm btn-primary">' + (saving ? '保存中...' : '保存') + '</button>' +
       '</div>';
 
     container.innerHTML = html;
@@ -238,38 +238,38 @@
     closeNwPopup();   // clear any stale popup before re-rendering the panel
 
     var html = '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;table-layout:fixed;">' +
-      '<thead><tr style="background:#fafafa;text-align:left;">' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:22%;">UA 关键词</th>' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:42%;">允许下发的节点（可多选）</th>' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:22%;">备注</th>' +
-      '<th style="padding:8px 12px;border-bottom:1px solid #e8e8e8;width:14%;text-align:center;">操作</th>' +
+      '<thead><tr style="text-align:left;">' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:22%;">UA 关键词</th>' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:42%;">允许下发的节点（可多选）</th>' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:22%;">备注</th>' +
+      '<th style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;width:14%;text-align:center;">操作</th>' +
       '</tr></thead><tbody>';
 
     if (nwRules.length === 0) {
-      html += '<tr><td colspan="4" style="padding:16px;text-align:center;color:#999;border-bottom:1px solid #e8e8e8;">暂无规则，点击下方按钮添加</td></tr>';
+      html += '<tr><td colspan="4" style="padding:16px;text-align:center;color:#999;border-bottom:1px solid #eee;">暂无规则，点击下方按钮添加</td></tr>';
     } else {
       nwRules.forEach(function (rule, i) {
         var nodes = Array.isArray(rule.nodes) ? rule.nodes : [];
         var pickerLabel = nodes.length === 0 ? '点击选择节点' : ('已选 ' + nodes.length + ' 个');
         html += '<tr data-index="' + i + '" style="vertical-align:top;">' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;"><input type="text" class="nw-input" data-field="ua" data-index="' + i + '" value="' + escapeAttr(rule.ua) + '" placeholder="如 Stash/2." /></td>' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;">' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;"><input type="text" class="nw-input" data-field="ua" data-index="' + i + '" value="' + escapeAttr(rule.ua) + '" placeholder="如 Stash/2." /></td>' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;">' +
             '<div class="nw-picker" data-index="' + i + '" style="border:1px solid #d9d9d9;border-radius:4px;padding:4px 8px;cursor:pointer;background:#fff;font-size:13px;min-height:24px;display:flex;align-items:center;justify-content:space-between;">' +
               '<span style="color:' + (nodes.length === 0 ? '#bfbfbf' : '#262626') + ';">' + escapeAttr(pickerLabel) + '</span>' +
               '<span style="color:#bfbfbf;font-size:10px;">▼</span>' +
             '</div>' +
             renderNwTags(i, nodes) +
           '</td>' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;"><input type="text" class="nw-input" data-field="remark" data-index="' + i + '" value="' + escapeAttr(rule.remark || '') + '" placeholder="可选" /></td>' +
-          '<td style="padding:6px 12px;border-bottom:1px solid #e8e8e8;text-align:center;"><button class="nw-del-btn" data-index="' + i + '" style="color:#ff4d4f;background:none;border:1px solid #ff4d4f;border-radius:4px;padding:2px 12px;cursor:pointer;font-size:13px;">删除</button></td>' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;"><input type="text" class="nw-input" data-field="remark" data-index="' + i + '" value="' + escapeAttr(rule.remark || '') + '" placeholder="可选" /></td>' +
+          '<td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:center;"><button class="nw-del-btn" data-index="' + i + '" style="color:#ff4d4f;background:none;border:1px solid #ff4d4f;border-radius:4px;padding:2px 12px;cursor:pointer;font-size:13px;">删除</button></td>' +
           '</tr>';
       });
     }
 
     html += '</tbody></table>';
     html += '<div style="display:flex;gap:8px;">' +
-      '<button id="nw-add-btn" style="background:#1890ff;color:#fff;border:none;border-radius:4px;padding:6px 20px;cursor:pointer;font-size:14px;">+ 添加规则</button>' +
-      '<button id="nw-save-btn" style="background:#52c41a;color:#fff;border:none;border-radius:4px;padding:6px 20px;cursor:pointer;font-size:14px;">' + (nwSaving ? '保存中...' : '保存') + '</button>' +
+      '<button id="nw-add-btn" class="btn btn-sm btn-outline-primary">+ 添加规则</button>' +
+      '<button id="nw-save-btn" class="btn btn-sm btn-primary">' + (nwSaving ? '保存中...' : '保存') + '</button>' +
       '</div>';
 
     container.innerHTML = html;
@@ -317,7 +317,7 @@
     html += buildOptionsHTML(ruleIndex);
     html += '</div>';
     html += '<div style="padding:6px 12px;border-top:1px solid #f0f0f0;text-align:right;">' +
-      '<button class="nw-close" style="background:#1890ff;color:#fff;border:none;border-radius:4px;padding:4px 14px;cursor:pointer;font-size:12px;">完成</button>' +
+      '<button class="nw-close btn btn-sm btn-primary">完成</button>' +
       '</div>';
     return html;
   }
@@ -622,9 +622,9 @@
 
     var section = document.createElement('div');
     section.id = 'drr-section';
-    section.style.cssText = 'margin-top:24px;padding:20px;background:#fff;border:1px solid #e8e8e8;border-radius:4px;';
-    section.innerHTML = '<h3 style="margin:0 0 4px 0;font-size:16px;font-weight:600;">订阅域名重写规则</h3>' +
-      '<p style="margin:0 0 16px 0;color:#999;font-size:13px;">当客户端 UA 包含指定关键词时，将节点列表中匹配的域名替换为指定 IP 下发</p>' +
+    section.style.cssText = 'padding:20px;border-bottom:1px solid #eee;';
+    section.innerHTML = '<div style="font-weight:bold;margin-bottom:5px;">订阅域名重写规则</div>' +
+      '<div style="font-size:12px;margin-bottom:12px;color:#666;">当客户端 UA 包含指定关键词时，将节点列表中匹配的域名替换为指定 IP 下发。</div>' +
       '<div id="drr-container"><div style="text-align:center;padding:20px;color:#999;">加载中...</div></div>';
 
     panel.appendChild(section);
@@ -653,9 +653,9 @@
 
     var section = document.createElement('div');
     section.id = 'nw-section';
-    section.style.cssText = 'margin-top:24px;padding:20px;background:#fff;border:1px solid #e8e8e8;border-radius:4px;';
-    section.innerHTML = '<h3 style="margin:0 0 4px 0;font-size:16px;font-weight:600;">订阅节点 UA 白名单规则</h3>' +
-      '<p style="margin:0 0 16px 0;color:#999;font-size:13px;">规则中出现过的节点变为"受限节点"，仅对 UA 命中对应关键词的客户端下发；未出现在任何规则中的节点对所有客户端正常下发</p>' +
+    section.style.cssText = 'padding:20px;border-bottom:1px solid #eee;';
+    section.innerHTML = '<div style="font-weight:bold;margin-bottom:5px;">订阅节点 UA 白名单规则</div>' +
+      '<div style="font-size:12px;margin-bottom:12px;color:#666;">规则中出现过的节点变为"受限节点"，仅对 UA 命中对应关键词的客户端下发；未出现在任何规则中的节点对所有客户端正常下发。</div>' +
       '<div id="nw-container"><div style="text-align:center;padding:20px;color:#999;">加载中...</div></div>';
 
     panel.appendChild(section);
@@ -671,8 +671,8 @@
   // ========== Style ==========
   function injectStyle() {
     var style = document.createElement('style');
-    style.textContent = '.drr-input,.nw-input,.nw-search{width:100%;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;box-sizing:border-box;outline:none;transition:border-color .2s;background:#fff;color:#262626;}' +
-      '.drr-input:focus,.nw-input:focus,.nw-search:focus{border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,.2);}' +
+    style.textContent = '.drr-input,.nw-input,.nw-search,.npl-input{width:100%;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;box-sizing:border-box;outline:none;transition:border-color .2s;background:#fff;color:#262626;}' +
+      '.drr-input:focus,.nw-input:focus,.nw-search:focus,.npl-input:focus{border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,.2);}' +
       '.drr-del-btn:hover,.nw-del-btn:hover{background:#fff1f0!important;color:#ff4d4f!important;}' +
       '#drr-add-btn:hover,#drr-save-btn:hover,#nw-add-btn:hover,#nw-save-btn:hover,.nw-close:hover{opacity:.85;}' +
       '#drr-save-btn:disabled,#nw-save-btn:disabled{opacity:.5;cursor:not-allowed;}' +
@@ -702,13 +702,196 @@
       if (!nwInjected) {
         injectNwPanel();
       }
+      renderNplPage();
     }, 800);
   }
 
-  // Start when DOM is ready
+  var API_NPL_FETCH = '/api/v1/' + SECURE_PATH + '/newPeriodLog/fetch';
+  var nplPage = 1;
+  var NPL_PAGE_SIZE = 20;
+  var nplTotal = 0;
+  var nplData = [];
+  var nplEmail = '';
+  var nplReqSeq = 0;
+
+  // 后台是 hash 路由，查询参数可能出现在 hash 或 search 中
+  function nplQueryParam(name) {
+    var source = (window.location.hash || '') + '&' + (window.location.search || '');
+    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(source);
+    if (!m) return '';
+    var raw = m[1].replace(/\+/g, ' ');
+    try {
+      return decodeURIComponent(raw);
+    } catch (e) {
+      return raw;   // 非法百分号转义时退回原文，不能让解析异常中断渲染
+    }
+  }
+
+  function nplOnCurrentRoute() {
+    return (window.location.hash || '').indexOf('/newPeriodLog') !== -1;
+  }
+
+  function nplFmtTs(ts) {
+    if (!ts) return '-';
+    var d = new Date(ts * 1000);
+    function p(n) { return n < 10 ? '0' + n : n; }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function nplFmtBytes(b) {
+    b = Number(b) || 0;
+    if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
+    if (b >= 1048576) return (b / 1048576).toFixed(2) + ' MB';
+    return (b / 1024).toFixed(2) + ' KB';
+  }
+
+  function renderNplPage() {
+    var root = document.getElementById('npl-root');
+    // 内容被外部清空时（React 重渲染）需要重建，不能只看标记
+    if (!root || (root.dataset.ready === '1' && root.querySelector('#npl-table'))) return;
+    nplPage = 1;
+    // 从用户管理页跳转过来时按该用户邮箱过滤
+    nplEmail = nplQueryParam('email');
+
+    root.innerHTML = '<div class="block" style="background:#fff;">' +
+      '<div style="padding:20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">' +
+      '<div>' +
+      '<div style="font-weight:bold;margin-bottom:5px;">提前续期记录</div>' +
+      '<div style="font-size:12px;color:#666;">用户流量用尽后提前开启下一计费周期（扣除订阅时长重置流量）的操作记录</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center;">' +
+      '<input type="text" id="npl-search" class="npl-input" style="width:220px;" placeholder="按用户邮箱搜索" value="' + escapeAttr(nplEmail) + '" />' +
+      '<button id="npl-search-btn" class="btn btn-sm btn-primary">搜索</button>' +
+      '<button id="npl-refresh-btn" class="btn btn-sm btn-outline-primary">刷新</button>' +
+      '</div>' +
+      '</div>' +
+      '<div id="npl-table" style="padding:0 20px;overflow-x:auto;"><div style="padding:24px;text-align:center;color:#999;">加载中...</div></div>' +
+      '<div id="npl-pager" style="padding:12px 20px 20px;display:flex;justify-content:space-between;align-items:center;"></div>' +
+      '</div>';
+
+    // DOM 就绪后再置位，避免中途异常导致标记已置而内容为空
+    root.dataset.ready = '1';
+
+    function nplDoSearch(value) {
+      nplEmail = value.trim();
+      nplPage = 1;
+      fetchNpl();
+    }
+    document.getElementById('npl-search-btn').addEventListener('click', function () {
+      nplDoSearch(document.getElementById('npl-search').value);
+    });
+    document.getElementById('npl-search').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') nplDoSearch(this.value);
+    });
+    document.getElementById('npl-refresh-btn').addEventListener('click', fetchNpl);
+
+    fetchNpl();
+  }
+
+  function fetchNpl() {
+    var tableDiv = document.getElementById('npl-table');
+    if (tableDiv) tableDiv.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">加载中...</div>';
+    var seq = ++nplReqSeq;                       // 仅采纳最后一次请求的结果，避免响应乱序覆盖
+    var pageOfThisReq = nplPage;
+    var params = 'current=' + nplPage + '&pageSize=' + NPL_PAGE_SIZE +
+      (nplEmail ? '&email=' + encodeURIComponent(nplEmail) : '');
+    fetch(API_NPL_FETCH + '?' + params, { headers: getAuthHeader() })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (res) {
+        if (seq !== nplReqSeq || !document.getElementById('npl-table')) return;
+        if (!res || !Array.isArray(res.data)) throw new Error((res && res.message) || '返回数据异常');
+        nplData = res.data;
+        nplTotal = res.total || 0;
+        renderNplTable();
+      })
+      .catch(function (err) {
+        if (seq !== nplReqSeq) return;
+        nplPage = pageOfThisReq;                 // 失败时回退页码，避免与页脚显示错位
+        var c = document.getElementById('npl-table');
+        if (c) c.innerHTML = '<div style="color:#ff4d4f;padding:24px;text-align:center;">加载失败：' +
+          escapeAttr(err && err.message ? err.message : '请重试') + '</div>';
+      });
+  }
+
+  function renderNplTable() {
+    var tableDiv = document.getElementById('npl-table');
+    if (!tableDiv) return;
+
+    var th = 'padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;text-align:left;white-space:nowrap;';
+    var td = 'padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;white-space:nowrap;';
+    var html = '<table style="width:100%;border-collapse:collapse;min-width:860px;">' +
+      '<thead><tr>' +
+      '<th style="' + th + '">时间</th>' +
+      '<th style="' + th + '">用户邮箱</th>' +
+      '<th style="' + th + '">套餐</th>' +
+      '<th style="' + th + '">扣除天数</th>' +
+      '<th style="' + th + '">原到期时间</th>' +
+      '<th style="' + th + '">新到期时间</th>' +
+      '<th style="' + th + '">重置前已用/配额</th>' +
+      '</tr></thead><tbody>';
+
+    if (nplData.length === 0) {
+      html += '<tr><td colspan="7" style="padding:24px;text-align:center;color:#999;border-bottom:1px solid #eee;">暂无记录</td></tr>';
+    } else {
+      nplData.forEach(function (item) {
+        html += '<tr>' +
+          '<td style="' + td + '">' + nplFmtTs(item.created_at) + '</td>' +
+          '<td style="' + td + '">' + escapeAttr(item.user_email || ('#' + item.user_id)) + '</td>' +
+          '<td style="' + td + '">' + escapeAttr(item.plan_name || '-') + '</td>' +
+          '<td style="' + td + '">' + escapeAttr(item.deduct_days) + ' 天</td>' +
+          '<td style="' + td + '">' + nplFmtTs(item.old_expired_at) + '</td>' +
+          '<td style="' + td + '">' + nplFmtTs(item.new_expired_at) + '</td>' +
+          '<td style="' + td + '">' + nplFmtBytes(Number(item.u) + Number(item.d)) + ' / ' + nplFmtBytes(item.transfer_enable) + '</td>' +
+          '</tr>';
+      });
+    }
+    html += '</tbody></table>';
+    tableDiv.innerHTML = html;
+
+    var pager = document.getElementById('npl-pager');
+    if (pager) {
+      var totalPages = Math.max(1, Math.ceil(nplTotal / NPL_PAGE_SIZE));
+      pager.innerHTML = '<span style="font-size:12px;color:#666;">共 ' + nplTotal + ' 条记录 · 第 ' + nplPage + ' / ' + totalPages + ' 页</span>' +
+        '<div style="display:flex;gap:8px;">' +
+        '<button id="npl-prev" class="btn btn-sm btn-outline-primary"' + (nplPage <= 1 ? ' disabled' : '') + '>上一页</button>' +
+        '<button id="npl-next" class="btn btn-sm btn-outline-primary"' + (nplPage >= totalPages ? ' disabled' : '') + '>下一页</button>' +
+        '</div>';
+      var prev = document.getElementById('npl-prev');
+      var next = document.getElementById('npl-next');
+      if (prev) prev.addEventListener('click', function () { if (nplPage > 1) { nplPage--; fetchNpl(); } });
+      if (next) next.addEventListener('click', function () { if (nplPage < totalPages) { nplPage++; fetchNpl(); } });
+    }
+  }
+
+  function watchNplRoot() {
+    var root = document.getElementById('root');
+    if (root && typeof MutationObserver !== 'undefined') {
+      new MutationObserver(function () { renderNplPage(); }).observe(root, {
+        childList: true,
+        subtree: true
+      });
+    }
+    // 已停留在记录页时切换到另一个用户，需按新参数重新渲染；离开本路由时不处理
+    window.addEventListener('hashchange', function () {
+      if (!nplOnCurrentRoute()) return;
+      var page = document.getElementById('npl-root');
+      if (!page) return;
+      page.dataset.ready = '';
+      renderNplPage();
+    });
+    renderNplPage();   // 直接访问/刷新本页时立即渲染，不必等定时器
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startObserver);
+    document.addEventListener('DOMContentLoaded', function () {
+      startObserver();
+      watchNplRoot();
+    });
   } else {
     startObserver();
+    watchNplRoot();
   }
 })();

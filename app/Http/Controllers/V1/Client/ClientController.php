@@ -9,15 +9,28 @@ use App\Protocols\Singbox\Singbox;
 use App\Protocols\Singbox\SingboxOld;
 use App\Protocols\ClashMeta;
 use App\Services\ServerService;
+use App\Services\SubscribeEncryptService;
 use App\Services\UserService;
 use App\Utils\Helper;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
+    // 标记本次响应是否已由 NextinEncrypted 通道处理，避免叠加订阅加密
+    private $nextinHandled = false;
+
     public function subscribe(Request $request)
     {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $response = $this->buildSubscribe($request, $userAgent);
+        if ($this->nextinHandled) {
+            return $response;
+        }
+        return SubscribeEncryptService::encryptResponse($response, $request->user, $userAgent, (string)$request->header('X-IV', ''));
+    }
+
+    private function buildSubscribe(Request $request, $userAgent)
+    {
         $flag = $request->input('flag') ?? $userAgent;
         $flag = strtolower($flag);
         $user = $request->user;
@@ -46,6 +59,7 @@ class ClientController extends Controller
                 }
 
                 if ($shouldReturnEncryptedClashMeta) {
+                    $this->nextinHandled = true;
                     return $nextinEncrypted->handle();
                 }
 

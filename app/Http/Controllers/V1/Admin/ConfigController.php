@@ -118,6 +118,11 @@ class ConfigController extends Controller
                 'show_info_to_server_enable' => (int) config('v2board.show_info_to_server_enable', 0),
                 'show_subscribe_method' => (int) config('v2board.show_subscribe_method', 0),
                 'show_subscribe_expire' => (int) config('v2board.show_subscribe_expire', 5),
+                'subscribe_encrypt_enable' => (int) config('v2board.subscribe_encrypt_enable', 0),
+                'subscribe_encrypt_key' => config('v2board.subscribe_encrypt_key'),
+                'subscribe_encrypt_iv' => config('v2board.subscribe_encrypt_iv'),
+                'subscribe_encrypt_ua' => config('v2board.subscribe_encrypt_ua'),
+                'subscribe_encrypt_plan_ids' => config('v2board.subscribe_encrypt_plan_ids'),
             ],
             'frontend' => [
                 'frontend_theme' => config('v2board.frontend_theme', 'v2board'),
