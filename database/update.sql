@@ -875,3 +875,13 @@ CREATE TABLE IF NOT EXISTS `v2_new_period_log` (
   KEY `user_id` (`user_id`),
   KEY `created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE `v2_new_period_log`
+ADD `type` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1提前续期 2订阅覆盖' AFTER `user_id`,
+ADD `order_id` int(11) NULL COMMENT '触发覆盖的订单' AFTER `type`,
+ADD `new_plan_id` int(11) NULL COMMENT '覆盖后订阅' AFTER `plan_id`,
+ADD UNIQUE `order_id_type` (`order_id`, `type`);
+
+ALTER TABLE `v2_new_period_log`
+MODIFY `old_expired_at` bigint(20) NOT NULL DEFAULT '0' COMMENT '原到期时间',
+MODIFY `new_expired_at` bigint(20) NOT NULL DEFAULT '0' COMMENT '新到期时间';

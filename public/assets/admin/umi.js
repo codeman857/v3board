@@ -21205,6 +21205,13 @@
                             className: "nav-main-link-icon si si-refresh"
                         })
                     }, {
+                        title: "\u8ba2\u9605\u8986\u76d6\u8bb0\u5f55",
+                        type: "item",
+                        href: "/planChangeLog",
+                        icon: o.a.createElement("i", {
+                            className: "nav-main-link-icon si si-shuffle"
+                        })
+                    }, {
                         title: "\u4f18\u60e0\u5238\u7ba1\u7406",
                         type: "item",
                         href: "/coupon",
@@ -70978,6 +70985,9 @@
             newPeriodLogFilter(e) {
                 _.a.push("/newPeriodLog?email=" + encodeURIComponent(e || ""))
             }
+            planChangeLogFilter(e) {
+                _.a.push("/planChangeLog?email=" + encodeURIComponent(e || ""))
+            }
             resetSecret(e) {
                 var t = this;
                 p["a"].confirm({
@@ -71160,6 +71170,10 @@
                             }, g.a.createElement("a", null, g.a.createElement(u["a"], {
                                 type: "reload"
                             }), " TA\u7684\u63d0\u524d\u7eed\u671f\u8bb0\u5f55")), g.a.createElement(c["a"].Item, {
+                                onClick: ()=>this.planChangeLogFilter(t.email)
+                            }, g.a.createElement("a", null, g.a.createElement(u["a"], {
+                                type: "swap"
+                            }), " TA\u7684\u8ba2\u9605\u8986\u76d6\u8bb0\u5f55")), g.a.createElement(c["a"].Item, {
                                 onContextMenu: e=>{
                                     e.stopPropagation()
                                 }
@@ -82433,6 +82447,16 @@
                     title: "\u63d0\u524d\u7eed\u671f\u8bb0\u5f55"
                 }), i.a.createElement("div", {
                     id: "npl-root"
+                }))
+            }
+        }, {
+            path: "/planChangeLog",
+            exact: !0,
+            component: function(e) {
+                return i.a.createElement(n("Bl7J")["a"], Object.assign({}, e, {
+                    title: "\u8ba2\u9605\u8986\u76d6\u8bb0\u5f55"
+                }), i.a.createElement("div", {
+                    id: "pcl-root"
                 }))
             }
         }, {
@@ -95750,7 +95774,35 @@
                     span: 6
                 }, "\u6298\u62b5\u91d1\u989d"), g.a.createElement(S["a"], {
                     span: 18
-                }, (this.state.order.surplus_amount / 100).toFixed(2))), g.a.createElement(_["a"], null), g.a.createElement(E["a"], {
+                }, (this.state.order.surplus_amount / 100).toFixed(2))), this.state.order.plan_change_log ? g.a.createElement("div", null, g.a.createElement(_["a"], null), g.a.createElement(E["a"], {
+                    gutter: [16, 16],
+                    style: n
+                }, g.a.createElement(S["a"], {
+                    span: 6
+                }, "\u8986\u76d6\u524d\u8ba2\u9605"), g.a.createElement(S["a"], {
+                    span: 18
+                }, this.state.order.plan_change_log.plan_name || "-")), g.a.createElement(E["a"], {
+                    gutter: [16, 16],
+                    style: n
+                }, g.a.createElement(S["a"], {
+                    span: 6
+                }, "\u8986\u76d6\u524d\u5230\u671f"), g.a.createElement(S["a"], {
+                    span: 18
+                }, this.state.order.plan_change_log.old_expired_at ? w()(1e3 * this.state.order.plan_change_log.old_expired_at).format("YYYY-MM-DD HH:mm:ss") : "\u4e00\u6b21\u6027")), g.a.createElement(E["a"], {
+                    gutter: [16, 16],
+                    style: n
+                }, g.a.createElement(S["a"], {
+                    span: 6
+                }, "\u8986\u76d6\u524d\u5269\u4f59\u6d41\u91cf"), g.a.createElement(S["a"], {
+                    span: 18
+                }, ((Number(this.state.order.plan_change_log.transfer_enable) - Number(this.state.order.plan_change_log.u) - Number(this.state.order.plan_change_log.d)) / 1073741824).toFixed(2) + " GB / " + (Number(this.state.order.plan_change_log.transfer_enable) / 1073741824).toFixed(2) + " GB")), g.a.createElement(E["a"], {
+                    gutter: [16, 16],
+                    style: n
+                }, g.a.createElement(S["a"], {
+                    span: 6
+                }, "\u8986\u76d6\u540e\u5230\u671f"), g.a.createElement(S["a"], {
+                    span: 18
+                }, this.state.order.plan_change_log.new_expired_at ? w()(1e3 * this.state.order.plan_change_log.new_expired_at).format("YYYY-MM-DD HH:mm:ss") : "\u4e00\u6b21\u6027"))) : "", g.a.createElement(_["a"], null), g.a.createElement(E["a"], {
                     gutter: [16, 16],
                     style: n
                 }, g.a.createElement(S["a"], {
@@ -95876,15 +95928,21 @@
                     title: "\u7c7b\u578b",
                     dataIndex: "type",
                     key: "type",
-                    render: e=>{
-                        var t = {
+                    render: (e,pcRec)=>{
+                        var pcMap = {
                             1: "\u65b0\u8d2d",
                             2: "\u7eed\u8d39",
                             3: "\u53d8\u66f4",
                             4: "\u6d41\u91cf\u5305",
                             9: "\u5145\u503c"
                         };
-                        return t[e]
+                        return 3 === e && pcRec.has_plan_change_log ? g.a.createElement("div", null, pcMap[e], " ", g.a.createElement(f["a"], {
+                            placement: "top",
+                            title: "\u67e5\u770b\u8be5\u8ba2\u5355\u8986\u76d6\u524d\u7684\u8ba2\u9605\u4fe1\u606f"
+                        }, g.a.createElement("a", {
+                            href: "javascript:void(0);",
+                            onClick: ()=>L.a.push("/planChangeLog?trade_no=" + encodeURIComponent(pcRec.trade_no || ""))
+                        }, "\u8986\u76d6\u8bb0\u5f55"))) : pcMap[e]
                     }
                 }, {
                     title: "\u8ba2\u9605\u8ba1\u5212",

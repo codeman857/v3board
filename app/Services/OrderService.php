@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Jobs\OrderHandleJob;
+use App\Models\NewPeriodLog;
 use App\Models\Order;
 use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderService
 {
@@ -63,6 +65,8 @@ class OrderService
                 abort(500, '开通失败');
             }
         }
+        $planChangeSnapshot = (int)$order->type === 3 ? $this->getPlanChangeSnapshot($order) : null;
+
         switch ((string)$order->period) {
             case 'onetime_price':
                 $this->buyByOneTime($order, $plan);
@@ -98,7 +102,47 @@ class OrderService
             abort(500, '开通失败');
         }
 
+        if ($planChangeSnapshot) {
+            $planChangeSnapshot['new_expired_at'] = (int)$this->user->expired_at;
+            if (!$this->recordPlanChange($planChangeSnapshot)) {
+                DB::rollBack();
+                abort(500, '开通失败');
+            }
+        }
+
         DB::commit();
+    }
+
+    private function getPlanChangeSnapshot(Order $order)
+    {
+        return [
+            'user_id' => $this->user->id,
+            'type' => NewPeriodLog::TYPE_PLAN_CHANGE,
+            'order_id' => $order->id,
+            'plan_id' => $this->user->plan_id,
+            'new_plan_id' => $order->plan_id,
+            'deduct_days' => 0,
+            // 一次性订阅的 expired_at 为 NULL，统一记 0
+            'old_expired_at' => (int)$this->user->expired_at,
+            'new_expired_at' => 0,
+            'u' => $this->user->u,
+            'd' => $this->user->d,
+            'transfer_enable' => $this->user->transfer_enable
+        ];
+    }
+
+    private function recordPlanChange(array $snapshot)
+    {
+        try {
+            $exists = NewPeriodLog::where('order_id', $snapshot['order_id'])
+                ->where('type', NewPeriodLog::TYPE_PLAN_CHANGE)
+                ->exists();
+            if ($exists) return true;
+            return (bool)NewPeriodLog::create($snapshot);
+        } catch (\Exception $e) {
+            Log::error('planChangeLog create failed: order_id=' . $snapshot['order_id'] . ' ' . $e->getMessage());
+            return false;
+        }
     }
 
 

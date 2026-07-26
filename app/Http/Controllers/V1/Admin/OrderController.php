@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\OrderAssign;
 use App\Http\Requests\Admin\OrderFetch;
 use App\Http\Requests\Admin\OrderUpdate;
 use App\Models\CommissionLog;
+use App\Models\NewPeriodLog;
 use App\Models\Order;
 use App\Models\Plan;
 use App\Models\User;
@@ -45,6 +46,16 @@ class OrderController extends Controller
         if ($order->surplus_order_ids) {
             $order['surplus_orders'] = Order::whereIn('id', $order->surplus_order_ids)->get();
         }
+        $planChangeLog = NewPeriodLog::where('order_id', $order->id)
+            ->where('type', NewPeriodLog::TYPE_PLAN_CHANGE)
+            ->first();
+        if ($planChangeLog) {
+            $oldPlan = Plan::find($planChangeLog->plan_id);
+            $newPlan = Plan::find($planChangeLog->new_plan_id);
+            $planChangeLog['plan_name'] = $oldPlan ? $oldPlan->name : null;
+            $planChangeLog['new_plan_name'] = $newPlan ? $newPlan->name : null;
+            $order['plan_change_log'] = $planChangeLog;
+        }
         return response([
             'data' => $order
         ]);
@@ -71,6 +82,14 @@ class OrderController extends Controller
                     $res[$i]['plan_name'] = $plan[$k]['name'];
                 }
             }
+        }
+        $changeOrderIds = $res->where('type', 3)->pluck('id');
+        $loggedOrderIds = $changeOrderIds->isEmpty() ? [] : NewPeriodLog::whereIn('order_id', $changeOrderIds)
+            ->where('type', NewPeriodLog::TYPE_PLAN_CHANGE)
+            ->pluck('order_id')
+            ->all();
+        foreach ($res as $item) {
+            $item['has_plan_change_log'] = in_array($item->id, $loggedOrderIds);
         }
         return response([
             'data' => $res,

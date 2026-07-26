@@ -671,8 +671,8 @@
   // ========== Style ==========
   function injectStyle() {
     var style = document.createElement('style');
-    style.textContent = '.drr-input,.nw-input,.nw-search,.npl-input{width:100%;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;box-sizing:border-box;outline:none;transition:border-color .2s;background:#fff;color:#262626;}' +
-      '.drr-input:focus,.nw-input:focus,.nw-search:focus,.npl-input:focus{border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,.2);}' +
+    style.textContent = '.drr-input,.nw-input,.nw-search,.npl-input,.pcl-input{width:100%;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;box-sizing:border-box;outline:none;transition:border-color .2s;background:#fff;color:#262626;}' +
+      '.drr-input:focus,.nw-input:focus,.nw-search:focus,.npl-input:focus,.pcl-input:focus{border-color:#1890ff;box-shadow:0 0 0 2px rgba(24,144,255,.2);}' +
       '.drr-del-btn:hover,.nw-del-btn:hover{background:#fff1f0!important;color:#ff4d4f!important;}' +
       '#drr-add-btn:hover,#drr-save-btn:hover,#nw-add-btn:hover,#nw-save-btn:hover,.nw-close:hover{opacity:.85;}' +
       '#drr-save-btn:disabled,#nw-save-btn:disabled{opacity:.5;cursor:not-allowed;}' +
@@ -703,6 +703,7 @@
         injectNwPanel();
       }
       renderNplPage();
+      renderPclPage();
     }, 800);
   }
 
@@ -793,7 +794,7 @@
     if (tableDiv) tableDiv.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">加载中...</div>';
     var seq = ++nplReqSeq;                       // 仅采纳最后一次请求的结果，避免响应乱序覆盖
     var pageOfThisReq = nplPage;
-    var params = 'current=' + nplPage + '&pageSize=' + NPL_PAGE_SIZE +
+    var params = 'current=' + nplPage + '&pageSize=' + NPL_PAGE_SIZE + '&type=1' +
       (nplEmail ? '&email=' + encodeURIComponent(nplEmail) : '');
     fetch(API_NPL_FETCH + '?' + params, { headers: getAuthHeader() })
       .then(function (r) {
@@ -885,13 +886,182 @@
     renderNplPage();   // 直接访问/刷新本页时立即渲染，不必等定时器
   }
 
+  var pclPage = 1;
+  var PCL_PAGE_SIZE = 20;
+  var pclTotal = 0;
+  var pclData = [];
+  var pclEmail = '';
+  var pclTradeNo = '';
+  var pclReqSeq = 0;
+
+  function pclOnCurrentRoute() {
+    return (window.location.hash || '').indexOf('/planChangeLog') !== -1;
+  }
+
+  function pclRemainBytes(item) {
+    var remain = Number(item.transfer_enable) - Number(item.u) - Number(item.d);
+    return remain > 0 ? remain : 0;
+  }
+
+  function pclRemainDays(item) {
+    if (!item.old_expired_at) return '-';
+    var days = (Number(item.old_expired_at) - Number(item.created_at)) / 86400;
+    return days > 0 ? days.toFixed(1) + ' 天' : '0 天';
+  }
+
+  function renderPclPage() {
+    var root = document.getElementById('pcl-root');
+    if (!root || (root.dataset.ready === '1' && root.querySelector('#pcl-table'))) return;
+    pclPage = 1;
+    pclEmail = nplQueryParam('email');
+    pclTradeNo = nplQueryParam('trade_no');
+
+    root.innerHTML = '<div class="block" style="background:#fff;">' +
+      '<div style="padding:20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">' +
+      '<div>' +
+      '<div style="font-weight:bold;margin-bottom:5px;">订阅覆盖记录</div>' +
+      '<div style="font-size:12px;color:#666;">购买不同订阅导致原订阅被覆盖时，覆盖前的到期时间与剩余流量快照</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+      '<input type="text" id="pcl-search" class="pcl-input" style="width:200px;" placeholder="按用户邮箱搜索" value="' + escapeAttr(pclEmail) + '" />' +
+      '<input type="text" id="pcl-trade-no" class="pcl-input" style="width:200px;" placeholder="按订单号搜索" value="' + escapeAttr(pclTradeNo) + '" />' +
+      '<button id="pcl-search-btn" class="btn btn-sm btn-primary">搜索</button>' +
+      '<button id="pcl-refresh-btn" class="btn btn-sm btn-outline-primary">刷新</button>' +
+      '</div>' +
+      '</div>' +
+      '<div id="pcl-table" style="padding:0 20px;overflow-x:auto;"><div style="padding:24px;text-align:center;color:#999;">加载中...</div></div>' +
+      '<div id="pcl-pager" style="padding:12px 20px 20px;display:flex;justify-content:space-between;align-items:center;"></div>' +
+      '</div>';
+
+    root.dataset.ready = '1';
+
+    function pclDoSearch() {
+      pclEmail = document.getElementById('pcl-search').value.trim();
+      pclTradeNo = document.getElementById('pcl-trade-no').value.trim();
+      pclPage = 1;
+      fetchPcl();
+    }
+    document.getElementById('pcl-search-btn').addEventListener('click', pclDoSearch);
+    document.getElementById('pcl-refresh-btn').addEventListener('click', fetchPcl);
+    ['pcl-search', 'pcl-trade-no'].forEach(function (id) {
+      document.getElementById(id).addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') pclDoSearch();
+      });
+    });
+
+    fetchPcl();
+  }
+
+  function fetchPcl() {
+    var tableDiv = document.getElementById('pcl-table');
+    if (tableDiv) tableDiv.innerHTML = '<div style="padding:24px;text-align:center;color:#999;">加载中...</div>';
+    var seq = ++pclReqSeq;                       // 仅采纳最后一次请求的结果，避免响应乱序覆盖
+    var pageOfThisReq = pclPage;
+    var params = 'current=' + pclPage + '&pageSize=' + PCL_PAGE_SIZE + '&type=2' +
+      (pclEmail ? '&email=' + encodeURIComponent(pclEmail) : '') +
+      (pclTradeNo ? '&trade_no=' + encodeURIComponent(pclTradeNo) : '');
+    fetch(API_NPL_FETCH + '?' + params, { headers: getAuthHeader() })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (res) {
+        if (seq !== pclReqSeq || !document.getElementById('pcl-table')) return;
+        if (!res || !Array.isArray(res.data)) throw new Error((res && res.message) || '返回数据异常');
+        pclData = res.data;
+        pclTotal = res.total || 0;
+        renderPclTable();
+      })
+      .catch(function (err) {
+        if (seq !== pclReqSeq) return;
+        pclPage = pageOfThisReq;                 // 失败时回退页码，避免与页脚显示错位
+        var c = document.getElementById('pcl-table');
+        if (c) c.innerHTML = '<div style="color:#ff4d4f;padding:24px;text-align:center;">加载失败：' +
+          escapeAttr(err && err.message ? err.message : '请重试') + '</div>';
+      });
+  }
+
+  function renderPclTable() {
+    var tableDiv = document.getElementById('pcl-table');
+    if (!tableDiv) return;
+
+    var th = 'padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666;font-weight:normal;text-align:left;white-space:nowrap;';
+    var td = 'padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;white-space:nowrap;';
+    var html = '<table style="width:100%;border-collapse:collapse;min-width:1100px;">' +
+      '<thead><tr>' +
+      '<th style="' + th + '">覆盖时间</th>' +
+      '<th style="' + th + '">用户邮箱</th>' +
+      '<th style="' + th + '">覆盖前订阅</th>' +
+      '<th style="' + th + '">覆盖前到期时间</th>' +
+      '<th style="' + th + '">覆盖前剩余时长</th>' +
+      '<th style="' + th + '">覆盖前剩余/配额</th>' +
+      '<th style="' + th + '">覆盖后订阅</th>' +
+      '<th style="' + th + '">覆盖后到期时间</th>' +
+      '<th style="' + th + '">订单号</th>' +
+      '</tr></thead><tbody>';
+
+    if (pclData.length === 0) {
+      html += '<tr><td colspan="9" style="padding:24px;text-align:center;color:#999;border-bottom:1px solid #eee;">暂无记录</td></tr>';
+    } else {
+      pclData.forEach(function (item) {
+        html += '<tr>' +
+          '<td style="' + td + '">' + nplFmtTs(item.created_at) + '</td>' +
+          '<td style="' + td + '">' + escapeAttr(item.user_email || ('#' + item.user_id)) + '</td>' +
+          '<td style="' + td + '">' + escapeAttr(item.plan_name || '-') + '</td>' +
+          '<td style="' + td + '">' + (item.old_expired_at ? nplFmtTs(item.old_expired_at) : '一次性') + '</td>' +
+          '<td style="' + td + '">' + pclRemainDays(item) + '</td>' +
+          '<td style="' + td + '">' + nplFmtBytes(pclRemainBytes(item)) + ' / ' + nplFmtBytes(item.transfer_enable) + '</td>' +
+          '<td style="' + td + '">' + escapeAttr(item.new_plan_name || '-') + '</td>' +
+          '<td style="' + td + '">' + (item.new_expired_at ? nplFmtTs(item.new_expired_at) : '一次性') + '</td>' +
+          '<td style="' + td + 'font-family:monospace;font-size:12px;">' + escapeAttr(item.trade_no || '-') + '</td>' +
+          '</tr>';
+      });
+    }
+    html += '</tbody></table>';
+    tableDiv.innerHTML = html;
+
+    var pager = document.getElementById('pcl-pager');
+    if (pager) {
+      var totalPages = Math.max(1, Math.ceil(pclTotal / PCL_PAGE_SIZE));
+      pager.innerHTML = '<span style="font-size:12px;color:#666;">共 ' + pclTotal + ' 条记录 · 第 ' + pclPage + ' / ' + totalPages + ' 页</span>' +
+        '<div style="display:flex;gap:8px;">' +
+        '<button id="pcl-prev" class="btn btn-sm btn-outline-primary"' + (pclPage <= 1 ? ' disabled' : '') + '>上一页</button>' +
+        '<button id="pcl-next" class="btn btn-sm btn-outline-primary"' + (pclPage >= totalPages ? ' disabled' : '') + '>下一页</button>' +
+        '</div>';
+      var prev = document.getElementById('pcl-prev');
+      var next = document.getElementById('pcl-next');
+      if (prev) prev.addEventListener('click', function () { if (pclPage > 1) { pclPage--; fetchPcl(); } });
+      if (next) next.addEventListener('click', function () { if (pclPage < totalPages) { pclPage++; fetchPcl(); } });
+    }
+  }
+
+  function watchPclRoot() {
+    var root = document.getElementById('root');
+    if (root && typeof MutationObserver !== 'undefined') {
+      new MutationObserver(function () { renderPclPage(); }).observe(root, {
+        childList: true,
+        subtree: true
+      });
+    }
+    window.addEventListener('hashchange', function () {
+      if (!pclOnCurrentRoute()) return;
+      var page = document.getElementById('pcl-root');
+      if (!page) return;
+      page.dataset.ready = '';
+      renderPclPage();
+    });
+    renderPclPage();
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       startObserver();
       watchNplRoot();
+      watchPclRoot();
     });
   } else {
     startObserver();
     watchNplRoot();
+    watchPclRoot();
   }
 })();
