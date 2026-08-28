@@ -318,8 +318,13 @@ class OrderService
     {
         $order = $this->order;
         DB::beginTransaction();
-        $order->status = 2;
-        if (!$order->save()) {
+        $affected = Order::where('id', $order->id)
+            ->where('status', 0)
+            ->update([
+                'status' => 2
+            ]);
+
+        if ($affected !== 1) {
             DB::rollBack();
             return false;
         }
