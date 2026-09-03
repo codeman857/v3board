@@ -73860,9 +73860,9 @@
                         this.setState({
                             visible: !0,
                             paymentMethods: e,
-                            selectPaymentMethod: this.state.submit.payment || e[0]
+                            selectPaymentMethod: this.state.selectPaymentMethod || this.state.submit.payment || e[0]
                         }, ()=>{
-                            this.onSelectPaymentMethod(this.state.submit.payment || e[0])
+                            this.onSelectPaymentMethod(this.state.selectPaymentMethod)
                         }
                         )
                     }
@@ -73992,7 +73992,7 @@
                         onChange: t=>this.configOnChange(e, t.target.value)
                     }))
                 }
-                ), "Paytaro" === r && d.a.createElement("div", {
+                ), r && r.includes("Paytaro") && d.a.createElement("div", {
                     className: "alert alert-warning mb-0",
                     role: "alert"
                 }, d.a.createElement("p", {
@@ -106642,9 +106642,9 @@
                     value: "httpupgrade"
                 }, "HTTPUpgrade"), e.protocol != "trojan" && y.a.createElement(N["a"].Option, {
                     value: "xhttp"
-                }, "XHTTP")))), y.a.createElement("div", {
+                }, "XHTTP")))), e.network != null && (e.network == "xhttp" || e.network == "ws" || e.network == "grpc") && y.a.createElement("div", {
                     className: "form-group"
-                }, e.network != null && (e.network == "xhttp" || e.network == "ws" || e.network == "grpc") && y.a.createElement("label", null, "\u4fe1\u4efb\u7684XFF\u5934\u90e8(\u83b7\u53d6\u771f\u5b9eIP)"), y.a.createElement(N["a"], {
+                }, y.a.createElement("label", null, "\u4fe1\u4efb\u7684XFF\u5934\u90e8(\u83b7\u53d6\u771f\u5b9eIP)"), y.a.createElement(N["a"], {
                     mode: "tags",
                     value: e.trusted_x_forwarded_for || [],
                     style: {
