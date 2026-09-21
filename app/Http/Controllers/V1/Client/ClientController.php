@@ -31,8 +31,12 @@ class ClientController extends Controller
 
     private function buildSubscribe(Request $request, $userAgent)
     {
-        $flag = $request->input('flag') ?? $userAgent;
-        $flag = strtolower($flag);
+        $explicitFlag = $request->input('flag');
+        $flag = strtolower($explicitFlag ?? $userAgent);
+        // 显式 flag 参数沿用 sing 匹配；UA 只认 sing-box / singbox，不再按 sing 子串匹配
+        $isSingBox = $explicitFlag !== null
+            ? strpos($flag, 'sing') !== false
+            : preg_match('/sing[-_ ]?box/', $flag) === 1;
         $user = $request->user;
         // account not expired and is not banned.
         $userService = new UserService();
@@ -53,7 +57,7 @@ class ClientController extends Controller
                     return response('', 403);
                 }
 
-                if ($shouldReturnEncryptedClashMeta || !strpos($flag, 'sing')) {
+                if ($shouldReturnEncryptedClashMeta || !$isSingBox) {
                     $this->setSubscribeInfoToServers($servers, $user);
                     $nextinEncrypted = new NextinEncrypted($user, $servers);
                 }
@@ -63,7 +67,7 @@ class ClientController extends Controller
                     return $nextinEncrypted->handle();
                 }
 
-                if (!strpos($flag, 'sing')) {
+                if (!$isSingBox) {
                     foreach (array_reverse(glob(app_path('Protocols') . '/*.php')) as $file) {
                         $file = 'App\\Protocols\\' . basename($file, '.php');
                         $class = new $file($user, $servers);
@@ -72,7 +76,7 @@ class ClientController extends Controller
                         }
                     }
                 }
-                if (strpos($flag, 'sing') !== false) {
+                if ($isSingBox) {
                     $version = null;
                     if (preg_match('/sing-box\s+([0-9.]+)/i', $flag, $matches)) {
                         $version = $matches[1];
