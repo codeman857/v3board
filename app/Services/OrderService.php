@@ -31,9 +31,18 @@ class OrderService
     public function open()
     {
         $order = $this->order;
-        $this->user = User::find($order->user_id);
+        DB::beginTransaction();
+        // 对订单行加锁并二次确认仍为「开通中」，防止支付回调、定时任务、多个队列进程并发重复开通
+        if (!$this->lockOrderForOpen()) {
+            DB::rollBack();
+            return;
+        }
+        $this->user = User::lockForUpdate()->find($order->user_id);
+        if (!$this->user) {
+            DB::rollBack();
+            abort(500, '用户不存在');
+        }
         if ($order->type == 9) {
-            DB::beginTransaction();
             $this->user->balance += $order->total_amount + $this->getbounus($order->total_amount);
 
             if (!$this->user->save()) {
@@ -54,7 +63,6 @@ class OrderService
         if ($order->refund_amount) {
             $this->user->balance = $this->user->balance + $order->refund_amount;
         }
-        DB::beginTransaction();
         if ($order->surplus_order_ids) {
             try {
                 Order::whereIn('id', $order->surplus_order_ids)->update([
@@ -302,10 +310,65 @@ class OrderService
     {
         $order = $this->order;
         if ($order->status !== 0) return true;
+        // 条件更新：只有仍为「待支付」的订单才能进入「开通中」，
+        // 避免与取消操作并发时把已取消（余额已退还）的订单覆盖回已支付并开通
+        $paidAt = time();
+        $affected = Order::where('id', $order->id)
+            ->where('status', 0)
+            ->update([
+                'status' => 1,
+                'paid_at' => $paidAt,
+                'callback_no' => $callbackNo
+            ]);
+        if ($affected !== 1) return false;
         $order->status = 1;
-        $order->paid_at = time();
+        $order->paid_at = $paidAt;
         $order->callback_no = $callbackNo;
-        if (!$order->save()) return false;
+        $order->syncOriginal();
+        try {
+            OrderHandleJob::dispatch($order->trade_no);
+        } catch (\Exception $e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 已取消订单补单：已取消(2) -> 开通中(1)，并记录管理员备注作为标注
+     * 取消时已退还的余额需重新扣回，余额不足则整体失败，由管理员先处理用户余额后再补单
+     */
+    public function paidFromCancelled(string $callbackNo, string $remark): bool
+    {
+        $order = $this->order;
+        if ($order->status !== 2) return false;
+        if (!User::where('id', $order->user_id)->exists()) abort(500, '用户不存在，无法补单');
+        $paidAt = time();
+        DB::beginTransaction();
+        $affected = Order::where('id', $order->id)
+            ->where('status', 2)
+            ->update([
+                'status' => 1,
+                'paid_at' => $paidAt,
+                'callback_no' => $callbackNo,
+                'remark' => $remark
+            ]);
+        if ($affected !== 1) {
+            DB::rollBack();
+            return false;
+        }
+        if ($order->balance_amount) {
+            $userService = new UserService();
+            if (!$userService->addBalance($order->user_id, -$order->balance_amount)) {
+                DB::rollBack();
+                abort(500, '用户余额不足，无法扣回该订单取消时退还的余额 ' . number_format($order->balance_amount / 100, 2) . ' 元，请先调整用户余额后再补单');
+            }
+        }
+        DB::commit();
+        $order->status = 1;
+        $order->paid_at = $paidAt;
+        $order->callback_no = $callbackNo;
+        $order->remark = $remark;
+        $order->syncOriginal();
         try {
             OrderHandleJob::dispatch($order->trade_no);
         } catch (\Exception $e) {
@@ -337,6 +400,15 @@ class OrderService
         }
         DB::commit();
         return true;
+    }
+
+    /**
+     * 开通前对订单加行锁并二次确认状态为「开通中」，保证同一订单只会被开通一次（需在事务内调用）
+     */
+    private function lockOrderForOpen(): bool
+    {
+        $locked = Order::where('id', $this->order->id)->lockForUpdate()->first();
+        return $locked && (int)$locked->status === 1;
     }
 
     private function setSpeedLimit($speedLimit)

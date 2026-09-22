@@ -36,7 +36,7 @@ class OrderController extends Controller
             }
         }
         return response([
-            'data' => $order->makeHidden(['id', 'user_id'])
+            'data' => $order->makeHidden(['id', 'user_id', 'remark'])
         ]);
     }
 
@@ -48,6 +48,8 @@ class OrderController extends Controller
         if (!$order) {
             abort(500, __('Order does not exist or has been paid'));
         }
+        // 管理员备注（如补单说明）仅后台可见
+        $order->makeHidden(['remark']);
         if ($order->plan_id == 0) {
             $order['plan'] = [
                 'id' => 0,
@@ -218,7 +220,7 @@ class OrderController extends Controller
         // free process
         if ($order->total_amount <= 0) {
             $orderService = new OrderService($order);
-            if (!$orderService->paid($order->trade_no)) abort(500, '');
+            if (!$orderService->paid($order->trade_no)) abort(500, __('Order does not exist or has been paid'));
             return response([
                 'type' => -1,
                 'data' => true

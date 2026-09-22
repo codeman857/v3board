@@ -24,9 +24,8 @@ class OrderController extends Controller
         if ($request->input('filter')) {
             foreach ($request->input('filter') as $filter) {
                 if ($filter['key'] === 'email') {
-                    $user = User::where('email', "%{$filter['value']}%")->first();
-                    if (!$user) continue;
-                    $builder->where('user_id', $user->id);
+                    $userIds = User::where('email', 'like', "%{$filter['value']}%")->pluck('id');
+                    $builder->whereIn('user_id', $userIds);
                     continue;
                 }
                 if ($filter['condition'] === '模糊') {
@@ -88,8 +87,10 @@ class OrderController extends Controller
             ->where('type', NewPeriodLog::TYPE_PLAN_CHANGE)
             ->pluck('order_id')
             ->all();
+        $users = User::whereIn('id', $res->pluck('user_id')->unique())->get()->keyBy('id');
         foreach ($res as $item) {
             $item['has_plan_change_log'] = in_array($item->id, $loggedOrderIds);
+            $item['user_email'] = isset($users[$item->user_id]) ? $users[$item->user_id]->email : null;
         }
         return response([
             'data' => $res,
@@ -104,11 +105,19 @@ class OrderController extends Controller
         if (!$order) {
             abort(500, '订单不存在');
         }
-        if ($order->status !== 0) abort(500, '只能对待支付的订单进行操作');
+        if (!in_array($order->status, [0, 2], true)) abort(500, '只能对待支付或已取消的订单进行操作');
 
         $orderService = new OrderService($order);
-        if (!$orderService->paid('manual_operation')) {
-            abort(500, '更新失败');
+        if ($order->status === 2) {
+            // 已取消订单补单：备注必填，作为后台标注展示在订单上
+            $remark = trim((string)$request->input('remark', ''));
+            if ($remark === '') abort(500, '请填写补单备注');
+            if (mb_strlen($remark) > 255) abort(500, '备注长度不能超过 255 个字符');
+            if (!$orderService->paidFromCancelled('manual_operation', $remark)) {
+                abort(500, '更新失败，订单状态已变化，请刷新后重试');
+            }
+        } else if (!$orderService->paid('manual_operation')) {
+            abort(500, '更新失败，订单状态已变化，请刷新后重试');
         }
         return response([
             'data' => true

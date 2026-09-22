@@ -12,7 +12,9 @@ use App\Services\OrderService;
 use App\Services\PaymentService;
 use App\Services\TelegramService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -44,6 +46,11 @@ class PaymentController extends Controller
         if (!$order) {
             abort(500, 'order is not found');
         }
+        if ($order->status === 2) {
+            // 订单已取消（用户取消或超时自动取消）后才收到支付回调：不自动开通，通知管理员核实后在后台补单
+            $this->notifyCancelledOrderPaid($order, $callbackNo);
+            return true;
+        }
         if ($order->status !== 0) return true;
 
         $orderService = new OrderService($order);
@@ -55,6 +62,36 @@ class PaymentController extends Controller
         $this->sendDetailedNotification($order);
 
         return true;
+    }
+
+    /**
+     * 已取消订单收到支付回调时记录日志并通知管理员（同一订单 24 小时内只通知一次）
+     *
+     * @param Order $order 订单对象
+     * @param string $callbackNo 回调订单号
+     * @return void
+     */
+    private function notifyCancelledOrderPaid($order, $callbackNo)
+    {
+        Log::warning("cancelled order received payment callback: trade_no={$order->trade_no} callback_no={$callbackNo}");
+        if (!Cache::add('CANCELLED_ORDER_PAID_NOTIFY_' . $order->trade_no, 1, 86400)) return;
+        $user = User::find($order->user_id);
+        $message = sprintf(
+            "⚠️ 已取消订单收到支付回调\n" .
+            "———————————————\n" .
+            "📧 用户邮箱：%s\n" .
+            "🆔 订  单  号：%s\n" .
+            "💰 订单金额：%s元\n" .
+            "🔁 回调单号：%s\n" .
+            "———————————————\n" .
+            "订单已取消，系统未自动开通。请核实收款后在后台「订单管理」中将该订单标记为已支付（补单）。",
+            $user ? $user->email : '未知',
+            $order->trade_no,
+            number_format($order->total_amount / 100, 2),
+            $callbackNo
+        );
+        $telegramService = new TelegramService();
+        $telegramService->sendMessageWithAdmin($message);
     }
 
     /**

@@ -167,6 +167,7 @@ CREATE TABLE `v2_order` (
                             `commission_balance` int(11) NOT NULL DEFAULT '0',
                             `actual_commission_balance` int(11) DEFAULT NULL COMMENT '实际支付佣金',
                             `paid_at` int(11) DEFAULT NULL,
+                            `remark` varchar(255) DEFAULT NULL COMMENT '管理员备注（如已取消订单补单说明）',
                             `created_at` int(11) NOT NULL,
                             `updated_at` int(11) NOT NULL,
                             PRIMARY KEY (`id`),

@@ -13485,6 +13485,7 @@
                 },
                 paid(e, t) {
                     var n = e.tradeNo
+                      , pdRemark = e.remark
                       , r = t.put;
                     return a().mark(function e() {
                         var t;
@@ -13493,7 +13494,10 @@
                                 switch (e.prev = e.next) {
                                 case 0:
                                     return e.next = 2,
-                                    Object(o["b"])("/" + window.settings.secure_path + "/order/paid", {
+                                    Object(o["b"])("/" + window.settings.secure_path + "/order/paid", pdRemark ? {
+                                        trade_no: n,
+                                        remark: pdRemark
+                                    } : {
                                         trade_no: n
                                     });
                                 case 2:
@@ -22515,7 +22519,9 @@
                         width: "100%"
                     },
                     onChange: e=>this.formChange("expired_at", e ? e.format("X") : null)
-                }))), p.a.createElement("div", {
+                }), null !== t.reset_day && void 0 !== t.reset_day ? p.a.createElement("small", {
+                    className: "text-muted"
+                }, "\u8ddd\u4e0b\u6b21\u6d41\u91cf\u91cd\u7f6e\u8fd8\u6709 " + t.reset_day + " \u5929") : null)), p.a.createElement("div", {
                     className: "form-group"
                 }, p.a.createElement("label", {
                     for: "example-text-input-alt"
@@ -71105,6 +71111,20 @@
                         }, e ? w()(1e3 * e).format("YYYY/MM/DD HH:mm") : null === e ? "\u957f\u671f\u6709\u6548" : "-")
                     }
                 }, {
+                    title: g.a.createElement("span", null, g.a.createElement(f["a"], {
+                        placement: "top",
+                        title: "\u8ddd\u4e0b\u6b21\u6d41\u91cf\u91cd\u7f6e\u7684\u5929\u6570\uff0c\u6309\u5957\u9910/\u7ad9\u70b9\u8bbe\u7f6e\u7684\u6d41\u91cf\u91cd\u7f6e\u65b9\u5f0f\u8ba1\u7b97\uff1b\u4e0d\u91cd\u7f6e\u6216\u8ba2\u9605\u65e0\u6548\u65f6\u663e\u793a -"
+                    }, "\u6d41\u91cf\u91cd\u7f6e ", g.a.createElement(u["a"], {
+                        type: "question-circle"
+                    }))),
+                    dataIndex: "reset_day",
+                    key: "reset_day",
+                    render: e=>{
+                        return null === e || void 0 === e ? "-" : g.a.createElement(h["a"], {
+                            color: e <= 3 ? "orange" : "blue"
+                        }, 0 === e ? "\u4e0d\u8db3 1 \u5929" : e + " \u5929\u540e")
+                    }
+                }, {
                     title: "\u4f59\u989d",
                     dataIndex: "balance",
                     key: "balance",
@@ -95751,7 +95771,16 @@
                     span: 6
                 }, "\u56de\u8c03\u5355\u53f7"), g.a.createElement(S["a"], {
                     span: 18
-                }, this.state.order.callback_no ? this.state.order.callback_no : "-")), g.a.createElement(_["a"], null), g.a.createElement(E["a"], {
+                }, this.state.order.callback_no ? this.state.order.callback_no : "-")), this.state.order.remark ? g.a.createElement(E["a"], {
+                    gutter: [16, 16],
+                    style: n
+                }, g.a.createElement(S["a"], {
+                    span: 6
+                }, "\u7ba1\u7406\u5458\u5907\u6ce8"), g.a.createElement(S["a"], {
+                    span: 18
+                }, g.a.createElement(p["a"], {
+                    color: "orange"
+                }, "\u8865\u5355"), " ", this.state.order.remark)) : "", g.a.createElement(_["a"], null), g.a.createElement(E["a"], {
                     gutter: [16, 16],
                     style: n
                 }, g.a.createElement(S["a"], {
@@ -95937,6 +95966,27 @@
                         }, e.substr(0, 3), "...", e.substr(-3)))
                     }
                 }, {
+                    title: "\u7528\u6237",
+                    dataIndex: "user_email",
+                    key: "user_email",
+                    render: (e,t)=>{
+                        return e ? g.a.createElement(f["a"], {
+                            placement: "top",
+                            title: "\u5728\u7528\u6237\u7ba1\u7406\u4e2d\u67e5\u770b\u8be5\u7528\u6237"
+                        }, g.a.createElement("a", {
+                            href: "javascript:void(0);",
+                            onClick: ()=>{
+                                this.props.dispatch({
+                                    type: "user/addFilter",
+                                    key: "email",
+                                    condition: "\u6a21\u7cca",
+                                    value: e
+                                }),
+                                L.a.push("/user")
+                            }
+                        }, e)) : "-"
+                    }
+                }, {
                     title: "\u7c7b\u578b",
                     dataIndex: "type",
                     key: "type",
@@ -95988,17 +96038,66 @@
                     render: (e,t)=>{
                         var n = ["error", "processing", "default", "success", "default"];
                         return g.a.createElement("div", null, g.a.createElement(c["a"], {
-                            disabled: 0 !== e,
+                            disabled: 0 !== e && 2 !== e,
                             trigger: ["click"],
                             overlay: g.a.createElement(h["a"], null, g.a.createElement(h["a"].Item, {
                                 key: "1",
                                 onClick: e=>{
+                                    if (2 === t.status) {
+                                        var pdRemark = "\u5df2\u6838\u5b9e\u6536\u6b3e\uff0c\u8865\u5355";
+                                        x["a"].confirm({
+                                            title: "\u5df2\u53d6\u6d88\u8ba2\u5355\u8865\u5355",
+                                            okText: "\u786e\u8ba4\u8865\u5355",
+                                            cancelText: "\u53d6\u6d88",
+                                            content: g.a.createElement("div", null, g.a.createElement("p", {
+                                                style: {
+                                                    marginBottom: 8
+                                                }
+                                            }, "\u8be5\u8ba2\u5355\u5df2\u53d6\u6d88\uff0c\u786e\u8ba4\u6539\u4e3a\u5df2\u652f\u4ed8\u5e76\u7531\u7cfb\u7edf\u5f00\u901a\uff1f"), t.balance_amount ? g.a.createElement("p", {
+                                                style: {
+                                                    color: "#fa8c16",
+                                                    marginBottom: 8
+                                                }
+                                            }, "\u6ce8\u610f\uff1a\u8be5\u8ba2\u5355\u53d6\u6d88\u65f6\u5df2\u9000\u8fd8\u4f59\u989d " + (t.balance_amount / 100).toFixed(2) + " \u5143\uff0c\u8865\u5355\u5c06\u4ece\u7528\u6237\u4f59\u989d\u91cd\u65b0\u6263\u56de\uff0c\u4f59\u989d\u4e0d\u8db3\u4f1a\u5931\u8d25\u3002") : null, g.a.createElement("div", {
+                                                style: {
+                                                    fontSize: 12,
+                                                    color: "#8c8c8c",
+                                                    marginBottom: 4
+                                                }
+                                            }, "\u8865\u5355\u5907\u6ce8\uff08\u5fc5\u586b\uff0c\u5c06\u4f5c\u4e3a\u6807\u6ce8\u663e\u793a\u5728\u8ba2\u5355\u4e0a\uff09"), g.a.createElement("input", {
+                                                className: "ant-input",
+                                                defaultValue: pdRemark,
+                                                maxLength: 255,
+                                                placeholder: "\u8bf7\u8f93\u5165\u8865\u5355\u5907\u6ce8",
+                                                onChange: e=>{
+                                                    pdRemark = e.target.value
+                                                }
+                                            })),
+                                            onOk: ()=>{
+                                                var pdText = (pdRemark || "").trim();
+                                                if (!pdText) {
+                                                    x["a"].warning({
+                                                        title: "\u8bf7\u586b\u5199\u8865\u5355\u5907\u6ce8",
+                                                        content: "\u5907\u6ce8\u4f1a\u4f5c\u4e3a\u6807\u6ce8\u663e\u793a\u5728\u8ba2\u5355\u4e0a\uff0c\u65b9\u4fbf\u65e5\u540e\u6838\u5bf9\u3002",
+                                                        okText: "\u77e5\u9053\u4e86"
+                                                    });
+                                                    return Promise.reject()
+                                                }
+                                                this.props.dispatch({
+                                                    type: "order/paid",
+                                                    tradeNo: t.trade_no,
+                                                    remark: pdText
+                                                })
+                                            }
+                                        });
+                                        return
+                                    }
                                     this.props.dispatch({
                                         type: "order/paid",
                                         tradeNo: t.trade_no
                                     })
                                 }
-                            }, "\u5df2\u652f\u4ed8"), g.a.createElement(h["a"].Item, {
+                            }, 2 === e ? "\u5df2\u652f\u4ed8\uff08\u5df2\u53d6\u6d88\u8ba2\u5355\u8865\u5355\uff09" : "\u5df2\u652f\u4ed8"), 0 === e ? g.a.createElement(h["a"].Item, {
                                 key: "2",
                                 onClick: e=>{
                                     this.props.dispatch({
@@ -96006,10 +96105,15 @@
                                         tradeNo: t.trade_no
                                     })
                                 }
-                            }, "\u53d6\u6d88"))
+                            }, "\u53d6\u6d88") : null)
                         }, g.a.createElement("div", null, g.a.createElement(u["a"], {
                             status: n[e]
-                        }), g.a.createElement("span", null, y["a"].orderStatusText[e], " "), 0 === e && g.a.createElement("a", {
+                        }), g.a.createElement("span", null, y["a"].orderStatusText[e], " "), t.remark ? g.a.createElement(f["a"], {
+                            placement: "top",
+                            title: "\u8865\u5355\u5907\u6ce8\uff1a" + t.remark
+                        }, g.a.createElement(p["a"], {
+                            color: "orange"
+                        }, "\u8865\u5355")) : null, (0 === e || 2 === e) && g.a.createElement("a", {
                             href: "javascript:void(0);"
                         }, "\u6807\u8bb0\u4e3a ", g.a.createElement(d["a"], {
                             type: "caret-down"

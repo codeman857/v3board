@@ -885,3 +885,6 @@ ADD UNIQUE `order_id_type` (`order_id`, `type`);
 ALTER TABLE `v2_new_period_log`
 MODIFY `old_expired_at` bigint(20) NOT NULL DEFAULT '0' COMMENT '原到期时间',
 MODIFY `new_expired_at` bigint(20) NOT NULL DEFAULT '0' COMMENT '新到期时间';
+
+ALTER TABLE `v2_order`
+ADD `remark` varchar(255) COLLATE 'utf8mb4_general_ci' NULL COMMENT '管理员备注（如已取消订单补单说明）' AFTER `paid_at`;

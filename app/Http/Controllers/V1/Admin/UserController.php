@@ -15,6 +15,7 @@ use App\Models\Plan;
 use App\Models\TicketMessage;
 use App\Models\User;
 use App\Services\AuthService;
+use App\Services\UserService;
 use App\Utils\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -77,12 +78,17 @@ class UserController extends Controller
         $res = $userModel->forPage($current, $pageSize)
             ->get();
         $plan = Plan::get();
+        $userService = new UserService();
         for ($i = 0; $i < count($res); $i++) {
             for ($k = 0; $k < count($plan); $k++) {
                 if ($plan[$k]['id'] == $res[$i]['plan_id']) {
                     $res[$i]['plan_name'] = $plan[$k]['name'];
+                    $res[$i]['plan'] = $plan[$k];
                 }
             }
+            // 距下次流量重置天数（null 表示不重置或订阅无效），与用户端同一算法；plan 临时挂载后移除避免下发多余数据
+            $res[$i]['reset_day'] = isset($res[$i]['plan']) ? $userService->getResetDay($res[$i]) : null;
+            unset($res[$i]['plan']);
             //统计在线设备
             $countalive = 0;
             $ips = [];
@@ -116,6 +122,13 @@ class UserController extends Controller
         $user = User::find($request->input('id'));
         if ($user->invite_user_id) {
             $user['invite_user'] = User::find($user->invite_user_id);
+        }
+        // 距下次流量重置天数，供用户编辑弹窗展示
+        $user['reset_day'] = null;
+        if ($user->plan_id !== NULL && ($plan = Plan::find($user->plan_id))) {
+            $user['plan'] = $plan;
+            $user['reset_day'] = (new UserService())->getResetDay($user);
+            unset($user['plan']);
         }
         return response([
             'data' => $user
