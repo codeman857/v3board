@@ -1,0 +1,1 @@
+var e=e=>Math.max(0,Number(e.transfer_enable)-Number(e.u)-Number(e.d));export{e as t};

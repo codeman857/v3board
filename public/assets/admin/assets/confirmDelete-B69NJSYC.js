@@ -1,0 +1,1 @@
+import{r as e}from"./staticApi-DIa82GhW.js";function t(t){e.confirm({title:`警告`,content:`确定要删除该条项目吗？`,onOk:()=>{t()},okText:`确定`,cancelText:`取消`})}export{t};

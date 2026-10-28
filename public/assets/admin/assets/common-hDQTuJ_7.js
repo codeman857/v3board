@@ -1,0 +1,1 @@
+import{t as e}from"./rolldown-runtime-hePW80VL.js";var t=e(((e,t)=>{function n(e){return e&&e.__esModule?e:{default:e}}t.exports=n,t.exports.__esModule=!0,t.exports.default=t.exports})),n=e((e=>{Object.defineProperty(e,"__esModule",{value:!0}),e.commonLocale=void 0,e.commonLocale={yearFormat:`YYYY`,dayFormat:`D`,cellMeridiemFormat:`A`,monthBeforeYear:!0}}));export{t as n,n as t};
