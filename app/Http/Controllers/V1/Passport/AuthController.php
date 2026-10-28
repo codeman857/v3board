@@ -12,6 +12,7 @@ use App\Models\InviteCode;
 use App\Models\Plan;
 use App\Models\User;
 use App\Services\AuthService;
+use App\Services\InsiderGuardService;
 use App\Services\TelegramService;
 use App\Utils\CacheKey;
 use App\Utils\Dict;
@@ -357,6 +358,7 @@ class AuthController extends Controller
             abort(500, __('Your account has been suspended'));
         }
 
+        InsiderGuardService::recordLogin($user, $request);
         $authService = new AuthService($user);
         return response([
             'data' => $authService->generateAuthData($request)

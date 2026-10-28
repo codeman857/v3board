@@ -117,6 +117,13 @@ class ConfigSave extends FormRequest
         'password_limit_enable' => 'in:0,1',
         'password_limit_count' => 'integer',
         'password_limit_expire' => 'integer',
+        // insider guard（风控中心）
+        'insider_guard_risk_threshold' => 'integer|min:0|max:100',
+        'insider_guard_retention_days' => 'integer|min:1|max:365',
+        'insider_guard_health_enable' => 'in:0,1',
+        'insider_guard_health_timeout' => 'integer|min:1|max:5',
+        'insider_guard_alert_cooldown_minutes' => 'integer|min:10|max:525600',
+        'insider_guard_decoy_host' => ['nullable', 'string', 'max:253', 'regex:/^(\[[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*\]|[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*|\d{1,3}(?:\.\d{1,3}){3}|[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?)*)$/'],
     ];
     /**
      * Get the validation rules that apply to the request.
@@ -126,6 +133,16 @@ class ConfigSave extends FormRequest
     public function rules()
     {
         $rules = self::RULES;
+
+        // 假入口地址形似 IP（含冒号或四段数字）时必须是合法的 IPv4 / IPv6，域名只做形式检查
+        $rules['insider_guard_decoy_host'][] = function ($attribute, $value, $fail) {
+            if ($value === null || $value === '') return;
+            $host = trim((string)$value, '[]');
+            if ((strpos($host, ':') !== false || preg_match('/^\d{1,3}(\.\d{1,3}){3}$/', $host))
+                && !filter_var($host, FILTER_VALIDATE_IP)) {
+                $fail('假入口地址不是有效的 IP');
+            }
+        };
 
         $rules['deposit_bounus'][] = function ($attribute, $value, $fail) {
             foreach ($value as $tier) {

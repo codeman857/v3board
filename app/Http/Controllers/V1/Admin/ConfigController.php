@@ -186,6 +186,14 @@ class ConfigController extends Controller
                 'password_limit_enable' => (int) config('v2board.password_limit_enable', 1),
                 'password_limit_count' => config('v2board.password_limit_count', 5),
                 'password_limit_expire' => config('v2board.password_limit_expire', 60)
+            ],
+            'insider_guard' => [
+                'insider_guard_risk_threshold' => (int) config('v2board.insider_guard_risk_threshold', 50),
+                'insider_guard_retention_days' => (int) config('v2board.insider_guard_retention_days', 3),
+                'insider_guard_health_enable' => (int) config('v2board.insider_guard_health_enable', 0),
+                'insider_guard_health_timeout' => (int) config('v2board.insider_guard_health_timeout', 2),
+                'insider_guard_alert_cooldown_minutes' => (int) config('v2board.insider_guard_alert_cooldown_minutes', 120),
+                'insider_guard_decoy_host' => (string) config('v2board.insider_guard_decoy_host', ''),
             ]
         ];
         if ($key && isset($data[$key])) {

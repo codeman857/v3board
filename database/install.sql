@@ -609,4 +609,90 @@ CREATE TABLE IF NOT EXISTS `v2_new_period_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+CREATE TABLE IF NOT EXISTS `v2_insider_guard_activity` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `event_type` varchar(20) CHARACTER SET ascii NOT NULL COMMENT 'login / subscription',
+  `hour_start` int(11) NOT NULL COMMENT '所在小时的起点',
+  `ip_address` varchar(45) CHARACTER SET ascii NOT NULL DEFAULT '',
+  `ua_hash` char(32) CHARACTER SET ascii NOT NULL DEFAULT '' COMMENT 'UA 的 md5，见 v2_insider_guard_ua',
+  `times` int(11) NOT NULL DEFAULT 1 COMMENT '该小时内的次数',
+  `node_count` int(11) DEFAULT NULL COMMENT '订阅：最近一次下发的节点数',
+  `first_at` int(11) NOT NULL,
+  `last_at` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `bucket` (`user_id`,`event_type`,`hour_start`,`ip_address`,`ua_hash`),
+  KEY `user_last` (`user_id`,`last_at`),
+  KEY `type_last` (`event_type`,`last_at`),
+  KEY `last_at` (`last_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风控中心：登录 / 订阅活动，同一用户、IP、UA 按小时合并';
+
+CREATE TABLE IF NOT EXISTS `v2_insider_guard_ua` (
+  `ua_hash` char(32) CHARACTER SET ascii NOT NULL,
+  `ua` varchar(512) NOT NULL,
+  `first_seen` int(11) NOT NULL,
+  `last_seen` int(11) NOT NULL,
+  PRIMARY KEY (`ua_hash`),
+  KEY `last_seen` (`last_seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风控中心：User-Agent 字典';
+
+CREATE TABLE IF NOT EXISTS `v2_insider_guard_node_user` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `node_type` varchar(40) NOT NULL,
+  `node_id` int(11) NOT NULL,
+  `times` int(11) NOT NULL DEFAULT 1 COMMENT '下发记录次数',
+  `first_at` int(11) NOT NULL,
+  `last_at` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_node` (`user_id`,`node_type`,`node_id`),
+  KEY `node_last` (`node_type`,`node_id`,`last_at`),
+  KEY `last_at` (`last_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风控中心：向用户下发过哪些节点，每人每节点一行';
+
+CREATE TABLE IF NOT EXISTS `v2_insider_guard_restrict` (
+  `user_id` int(11) NOT NULL,
+  `admin_id` int(11) DEFAULT NULL,
+  `reason` text NOT NULL,
+  `created_at` int(11) NOT NULL,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风控中心：被限制的用户，拉订阅时节点入口换成假地址';
+
+CREATE TABLE IF NOT EXISTS `v2_insider_guard_health` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `node_id` int(11) NOT NULL,
+  `node_type` varchar(40) NOT NULL,
+  `status` varchar(20) NOT NULL COMMENT 'up / down',
+  `latency_ms` int(11) DEFAULT NULL,
+  `error` varchar(255) DEFAULT NULL,
+  `created_at` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `node` (`node_type`,`node_id`,`created_at`),
+  KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风控中心：节点 TCP 探测记录';
+
+CREATE TABLE IF NOT EXISTS `v2_insider_guard_incident` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `node_id` int(11) NOT NULL,
+  `node_type` varchar(40) NOT NULL,
+  `occurred_at` int(11) NOT NULL,
+  `reason` text NOT NULL,
+  `admin_id` int(11) DEFAULT NULL,
+  `created_at` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `node` (`node_type`,`node_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风控中心：节点异常登记';
+
+CREATE TABLE IF NOT EXISTS `v2_insider_guard_review` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `admin_id` int(11) DEFAULT NULL,
+  `action` varchar(40) NOT NULL COMMENT 'watch / clear / restrict_recommended / restrict / release',
+  `reason` text NOT NULL,
+  `created_at` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风控中心：人工审核记录';
+
+
 -- 2025-09-12 10:05:00

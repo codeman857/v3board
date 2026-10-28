@@ -177,6 +177,19 @@ class AdminRoute
             $router->get ('/theme/getThemes', 'V1\\Admin\\ThemeController@getThemes');
             $router->post('/theme/saveThemeConfig', 'V1\\Admin\\ThemeController@saveThemeConfig');
             $router->post('/theme/getThemeConfig', 'V1\\Admin\\ThemeController@getThemeConfig');
+            // InsiderGuard（风控中心）
+            $router->get ('/insiderGuard/overview', 'V1\\Admin\\InsiderGuardController@overview');
+            $router->get ('/insiderGuard/users', 'V1\\Admin\\InsiderGuardController@users');
+            $router->get ('/insiderGuard/events', 'V1\\Admin\\InsiderGuardController@events');
+            $router->get ('/insiderGuard/userDetail', 'V1\\Admin\\InsiderGuardController@userDetail');
+            $router->post('/insiderGuard/review', 'V1\\Admin\\InsiderGuardController@review');
+            $router->post('/insiderGuard/restrict', 'V1\\Admin\\InsiderGuardController@restrict');
+            $router->post('/insiderGuard/release', 'V1\\Admin\\InsiderGuardController@release');
+            $router->post('/insiderGuard/nodeIncident', 'V1\\Admin\\InsiderGuardController@nodeIncident');
+            $router->get ('/insiderGuard/candidates', 'V1\\Admin\\InsiderGuardController@candidates');
+            $router->get ('/insiderGuard/timeline', 'V1\\Admin\\InsiderGuardController@timeline');
+            $router->get ('/insiderGuard/health', 'V1\\Admin\\InsiderGuardController@health');
+            $router->post('/insiderGuard/healthCheck', 'V1\\Admin\\InsiderGuardController@healthCheck')->middleware('throttle:10,1');
         });
     }
 }

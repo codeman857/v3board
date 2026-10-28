@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\V1\Client;
 
 use App\Http\Controllers\Controller;
+use App\Services\InsiderGuardService;
 use App\Services\ServerService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
@@ -14,11 +15,16 @@ class AppController extends Controller
     public function getConfig(Request $request)
     {
         $servers = [];
+        $decoy = false;
         $user = $request->user;
         $userService = new UserService();
-        if ($userService->isAvailable($user)) {
+        $available = $userService->isAvailable($user);
+        if ($available) {
             $serverService = new ServerService();
             $servers = $serverService->getAvailableServers($user);
+            // 风控中心限制的用户：与订阅接口一样，节点入口换成假地址
+            $decoy = InsiderGuardService::isRestricted((int)$user['id']);
+            if ($decoy) InsiderGuardService::applyDecoy($servers, (int)$user['id']);
         }
         $defaultConfig = base_path() . '/resources/rules/app.clash.yaml';
         $customConfig = base_path() . '/resources/rules/custom.app.clash.yaml';
@@ -29,6 +35,7 @@ class AppController extends Controller
         }
         $proxy = [];
         $proxies = [];
+        $delivered = [];
 
         foreach ($servers as $item) {
             if ($item['type'] === 'shadowsocks'
@@ -41,17 +48,24 @@ class AppController extends Controller
             ) {
                 array_push($proxy, \App\Protocols\Clash::buildShadowsocks($user['uuid'], $item));
                 array_push($proxies, $item['name']);
+                $delivered[] = $item;
             }
             if ($item['type'] === 'vmess') {
                 array_push($proxy, \App\Protocols\Clash::buildVmess($user['uuid'], $item));
                 array_push($proxies, $item['name']);
+                $delivered[] = $item;
             }
             if ($item['type'] === 'trojan') {
                 array_push($proxy, \App\Protocols\Clash::buildTrojan($user['uuid'], $item));
                 array_push($proxies, $item['name']);
+                $delivered[] = $item;
             }
         }
 
+        // 风控中心：与订阅接口一样，可用用户每次拉取记一次活动；下发记录只算实际输出的节点
+        if ($available) {
+            InsiderGuardService::recordSubscribe($user, $request, $delivered, $decoy);
+        }
         $config['proxies'] = array_merge($config['proxies'] ? $config['proxies'] : [], $proxy);
         foreach ($config['proxy-groups'] as $k => $v) {
             $config['proxy-groups'][$k]['proxies'] = array_merge($config['proxy-groups'][$k]['proxies'], $proxies);

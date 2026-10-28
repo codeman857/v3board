@@ -8,6 +8,7 @@ use App\Protocols\NextinEncrypted;
 use App\Protocols\Singbox\Singbox;
 use App\Protocols\Singbox\SingboxOld;
 use App\Protocols\ClashMeta;
+use App\Services\InsiderGuardService;
 use App\Services\ServerService;
 use App\Services\SubscribeEncryptService;
 use App\Services\UserService;
@@ -43,19 +44,21 @@ class ClientController extends Controller
         if ($userService->isAvailable($user)) {
             $serverService = new ServerService();
             $servers = $serverService->getAvailableServers($user);
+            // 被 Nextin 规则拦截的 UA 什么都拿不到，不算一次下发，提前返回
+            if ($flag && NextinEncrypted::shouldBlockSubscriptionForUserAgent($userAgent)) {
+                return response('', 403);
+            }
+            // 风控中心限制的用户：节点照常下发，入口地址换成假的；放在域名重写之前，重写规则不会再把真实地址带回来
+            $decoy = InsiderGuardService::isRestricted((int)$user->id);
+            if ($decoy) InsiderGuardService::applyDecoy($servers, (int)$user->id);
             $this->applyDomainRewriteRules($servers, $flag);
             $this->applyNodeWhitelistRules($servers, $flag);
+            InsiderGuardService::recordSubscribe($user, $request, $servers, $decoy);
             if($flag) {
                 $nextinEncrypted = new NextinEncrypted($user, $servers);
-                $shouldBlockNextinSubscription =
-                    NextinEncrypted::shouldBlockSubscriptionForUserAgent($userAgent);
                 $shouldReturnEncryptedClashMeta =
                     NextinEncrypted::shouldEncryptForUserAgent($userAgent)
                     || strpos($flag, $nextinEncrypted->flag) !== false;
-
-                if ($shouldBlockNextinSubscription) {
-                    return response('', 403);
-                }
 
                 if ($shouldReturnEncryptedClashMeta || !$isSingBox) {
                     $this->setSubscribeInfoToServers($servers, $user);
