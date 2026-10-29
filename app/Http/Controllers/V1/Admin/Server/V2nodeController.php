@@ -144,6 +144,27 @@ class V2nodeController extends Controller
                 $params['tls_settings']['tls_key'] = $tlsKey;
                 $params['tls_settings']['pinned_peer_cert_sha256'] = $tlsPin;
             }
+            // v3board：证书路径没填（或是之前自动生成的）时，按 pin 给一个专属路径。v2node 后端在证书文件已存在时不会覆盖，
+            // 各证书模式共用默认路径，从其它模式切过来时节点上残留的旧证书会和 pin 对不上，按 pin 校验的客户端就连不上；
+            // pin 重新生成后前缀变了也会换成新路径。站长手填的路径不动；已有节点重新保存一次即可生效
+            $pin = $params['tls_settings']['pinned_peer_cert_sha256'] ?? '';
+            $pinPrefix = is_string($pin) ? substr($pin, 0, 16) : '';
+            $certFile = $params['tls_settings']['cert_file'] ?? '';
+            $keyFile = $params['tls_settings']['key_file'] ?? '';
+            if (preg_match('/^[0-9a-f]{16}$/', $pinPrefix)
+                && (empty($certFile) || self::isAutoCertPath($certFile))
+                && (empty($keyFile) || self::isAutoCertPath($keyFile))) {
+                $params['tls_settings']['cert_file'] = "/etc/v2node/remote-{$pinPrefix}.cer";
+                $params['tls_settings']['key_file'] = "/etc/v2node/remote-{$pinPrefix}.key";
+            }
+        }
+        // v3board：切出「自签名（面板下发）」时去掉自动生成的专属路径，退回各模式的默认路径，
+        // 否则后端看到自签证书文件已存在，会一直用它而不去申请 / 生成新模式的证书
+        if (isset($params['tls_settings']) && is_array($params['tls_settings'])
+            && ($params['tls_settings']['cert_mode'] ?? '') !== 'remote') {
+            foreach (['cert_file', 'key_file'] as $field) {
+                if (self::isAutoCertPath($params['tls_settings'][$field] ?? '')) unset($params['tls_settings'][$field]);
+            }
         }
         if (isset($params['network_settings'])) {
             $ns = $params['network_settings'];
@@ -303,5 +324,11 @@ class V2nodeController extends Controller
         return response([
             'data' => true
         ]);
+    }
+
+    /** 是否是「自签名（面板下发）」模式自动生成的证书路径 /etc/v2node/remote-<pin 前 16 位>.cer|key */
+    private static function isAutoCertPath($path): bool
+    {
+        return is_string($path) && preg_match('#^/etc/v2node/remote-[0-9a-f]{16}\.(cer|key)$#', $path) === 1;
     }
 }
