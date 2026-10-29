@@ -40,6 +40,7 @@ class ClashMeta
             if (($item['type'] ?? null) === 'v2node' && isset($item['protocol'])) {
                 $item['type'] = $item['protocol'];
             }
+            $built = count($proxy);
             switch ($item['type']) {
                 case 'shadowsocks':
                     $proxy[] = self::buildShadowsocks($user['uuid'], $item);
@@ -74,6 +75,8 @@ class ClashMeta
                     $proxies[] = $item['name'];
                     break;
             }
+            // v3board：补全自签证书固定（fingerprint）与 uTLS 指纹
+            if (count($proxy) > $built) Helper::applyMihomoTls($proxy[count($proxy) - 1], $item);
         }
 
         $config['proxies'] = array_merge($config['proxies'] ? $config['proxies'] : [], $proxy);

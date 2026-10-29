@@ -81,11 +81,12 @@ class ClientController extends Controller
                 }
                 if ($isSingBox) {
                     $version = null;
-                    if (preg_match('/sing-box\s+([0-9.]+)/i', $flag, $matches)) {
+                    // 保留预发布后缀（1.13.0-beta.2），后续按版本下发新字段时才不会把预发布版当成正式版
+                    if (preg_match('/sing-box\s+([0-9]+(?:\.[0-9]+)*(?:-[0-9A-Za-z.]+)?)/i', $flag, $matches)) {
                         $version = $matches[1];
                     }
                     if (!is_null($version) && $version >= '1.12.0') {
-                        $class = new Singbox($user, $servers);
+                        $class = new Singbox($user, $servers, ['version' => $version]);
                     } else {
                         $class = new SingboxOld($user, $servers);
                     }

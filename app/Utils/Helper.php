@@ -208,6 +208,103 @@ class Helper
         return strtr(rawurlencode($str), $revert);
     }
 
+    /**
+     * v2node 自签证书（证书模式为「自签名（面板下发）」）的证书 SHA256，十六进制小写。
+     * 改成其它证书模式后旧 pin 还留在 tls_settings 里，照下发会让客户端连不上，所以只认 remote 模式；Reality 不用证书，也不下发
+     */
+    public static function pinnedCertSha256(array $server): string
+    {
+        $tls = $server['tls_settings'] ?? null;
+        if (!is_array($tls) || (int)($server['tls'] ?? 1) === 2 || ($tls['cert_mode'] ?? '') !== 'remote') return '';
+        $raw = $tls['pinned_peer_cert_sha256'] ?? '';
+        if (!is_string($raw)) return '';
+        $pin = strtolower(str_replace(':', '', trim($raw)));
+        return preg_match('/^[0-9a-f]{64}$/', $pin) ? $pin : '';
+    }
+
+    /**
+     * 本次新增下发（mihomo fingerprint、sing-box 公钥固定、hy2 pinSHA256、anytls hpkp）用的 pin：节点开了「允许不安全」时不下发。
+     * v2node 后端在 remote 模式下若节点上已有旧证书文件就不会覆盖，证书可能和面板的 pin 对不上；这些客户端里 pin 会压过
+     * 跳过校验，原来靠允许不安全能连的用户下发 pin 后反而会断。URI 的 pcs 保持上游行为，仍用 pinnedCertSha256
+     */
+    public static function clientPinSha256(array $server): string
+    {
+        $allowInsecure = $server['tls_settings']['allow_insecure'] ?? 0;
+        if (is_scalar($allowInsecure) && (int)$allowInsecure === 1) return '';
+        return self::pinnedCertSha256($server);
+    }
+
+    /**
+     * 节点设置的 uTLS 指纹；只放行客户端都认识的值（sing-box 遇到不认识的值会整份配置加载失败），其余当作没设
+     */
+    public static function utlsFingerprint(array $server): string
+    {
+        $raw = $server['tls_settings']['fingerprint'] ?? '';
+        if (!is_string($raw)) return '';
+        $fp = strtolower(trim($raw));
+        return in_array($fp, ['chrome', 'firefox', 'safari', 'ios', 'android', 'edge', '360', 'qq', 'random', 'randomized'], true) ? $fp : '';
+    }
+
+    /**
+     * 同一张自签证书的公钥 SHA256（base64，sing-box 1.13+ 的 certificate_public_key_sha256 用）。
+     * 从面板保存的证书现算，证书与 pin 对不上时不下发
+     */
+    public static function pinnedPublicKeySha256(array $server): string
+    {
+        $pin = self::clientPinSha256($server);
+        $pem = $server['tls_settings']['tls_cert'] ?? '';
+        if ($pin === '' || !is_string($pem) || $pem === '') return '';
+        $der = base64_decode(preg_replace('/-----(BEGIN|END) CERTIFICATE-----|\s+/', '', $pem), true);
+        if ($der === false || hash('sha256', $der) !== $pin) return '';
+        $key = @openssl_pkey_get_public($pem);
+        $details = $key ? openssl_pkey_get_details($key) : false;
+        if (!$details || empty($details['key'])) return '';
+        $spki = base64_decode(preg_replace('/-----(BEGIN|END) PUBLIC KEY-----|\s+/', '', $details['key']), true);
+        return $spki === false ? '' : base64_encode(hash('sha256', $spki, true));
+    }
+
+    /**
+     * Clash Meta 系（mihomo）补全 TLS 字段：fingerprint（证书 SHA256 固定，自签证书用）、client-fingerprint（uTLS，按节点设置），
+     * 以及 v2node vmess 漏掉的 servername / skip-cert-verify（构造函数只读经典 vmess 的驼峰键）。节点没配这些值时不改动原输出
+     */
+    public static function applyMihomoTls(array &$proxy, array $server): void
+    {
+        $type = $proxy['type'] ?? '';
+        if (isset($proxy['reality-opts']) || (int)($server['tls'] ?? 1) === 2) return;
+        if (in_array($type, ['vmess', 'vless'], true) && empty($proxy['tls'])) return;
+        if (!in_array($type, ['vmess', 'vless', 'trojan', 'tuic', 'anytls', 'hysteria', 'hysteria2'], true)) return;
+        $tls = is_array($server['tls_settings'] ?? null) ? $server['tls_settings'] : [];
+        if ($type === 'vmess') {
+            $sni = $tls['server_name'] ?? '';
+            if (empty($proxy['servername']) && is_string($sni) && $sni !== '') $proxy['servername'] = $sni;
+            if (!isset($proxy['skip-cert-verify']) && (int)($tls['allow_insecure'] ?? 0) === 1) $proxy['skip-cert-verify'] = true;
+        }
+        $pin = self::clientPinSha256($server);
+        if ($pin !== '') $proxy['fingerprint'] = $pin;
+        $fp = self::utlsFingerprint($server);
+        if ($fp !== '' && in_array($type, ['vmess', 'vless', 'trojan', 'anytls'], true)) $proxy['client-fingerprint'] = $fp;
+    }
+
+    /**
+     * sing-box 补全 TLS 字段：vmess / trojan 的 uTLS（按节点设置）；1.13+ 下发自签证书的公钥固定。
+     * 1.13 以下不认识 certificate_public_key_sha256，会整份配置加载失败，所以按版本号判断；节点没配这些值时不改动原输出
+     */
+    public static function applySingboxTls(array &$outbound, array $server, ?string $version): void
+    {
+        if (empty($outbound['tls']['enabled']) || !empty($outbound['tls']['reality']) || (int)($server['tls'] ?? 1) === 2) return;
+        $fp = self::utlsFingerprint($server);
+        if ($fp !== '' && in_array($outbound['type'] ?? '', ['vmess', 'trojan'], true) && empty($outbound['tls']['utls'])) {
+            $outbound['tls']['utls'] = ['enabled' => true, 'fingerprint' => $fp];
+        }
+        // 部分预发布版还没有这个字段，version_compare 把预发布版都排在 1.13.0 之前，保守起见不下发
+        if ($version === null || version_compare($version, '1.13.0', '<')) return;
+        $hash = self::pinnedPublicKeySha256($server);
+        if ($hash === '') return;
+        $outbound['tls']['certificate_public_key_sha256'] = [$hash];
+        // 禁用 SNI 且 insecure=false 时 sing-box 会另外用系统根证书校验证书链，自签证书过不去；pin 本身仍然生效
+        if (!empty($outbound['tls']['disable_sni'])) $outbound['tls']['insecure'] = true;
+    }
+
     public static function buildUri($uuid, $server)
     {
         if ($server['type'] == 'v2node') {
@@ -282,7 +379,7 @@ class Helper
             $tlsSettings = $server['tls_settings'] ?? $server['tlsSettings'] ?? [];
             $config['allowInsecure'] = (int)($tlsSettings['allow_insecure'] ?? $tlsSettings['allowInsecure'] ?? 0);
             $config['sni'] = $tlsSettings['server_name'] ?? $tlsSettings['serverName'] ?? '';
-            $config['pcs'] = $tlsSettings['pinned_peer_cert_sha256'] ?? '';
+            $config['pcs'] = self::pinnedCertSha256($server);
         }
 
         $network = (string)$server['network'];
@@ -349,7 +446,7 @@ class Helper
             "flow" => $server['flow'],
             "fp" => $tlsSettings['fingerprint'] ?? 'chrome',
             "insecure" => $tlsSettings['allow_insecure'] ?? 0,
-            "pcs" => $tlsSettings['pinned_peer_cert_sha256'] ?? '',
+            "pcs" => self::pinnedCertSha256($server),
         ];
 
         if ($server['tls']) {
@@ -389,7 +486,7 @@ class Helper
             'allowInsecure' => $server['allow_insecure'] ?? ($tlsSettings['allow_insecure'] ?? 0),
             'peer' => $server['server_name'] ?? ($tlsSettings['server_name'] ?? ''),
             'sni' => $server['server_name'] ?? ($tlsSettings['server_name'] ?? ''),
-            'pcs' => $tlsSettings['pinned_peer_cert_sha256'] ?? '',
+            'pcs' => self::pinnedCertSha256($server),
             'type'=> $server['network'],
         ];
 
@@ -451,8 +548,11 @@ class Helper
         $tlsSettings = $server['tls_settings'] ?? [];
         $insecure = $tlsSettings['allow_insecure'] ?? 0;
         $sni = $tlsSettings['server_name'] ?? '';
-        $pcs = $tlsSettings['pinned_peer_cert_sha256'] ?? '';
+        $pcs = self::pinnedCertSha256($server);
         $uri = "hysteria2://{$password}@{$remote}:{$firstPort}/?insecure={$insecure}&sni={$sni}&pcs={$pcs}";
+        // v3board：Hysteria2 官方 URI 规范与 mihomo 用 pinSHA256，pcs 只有 Xray / v2rayN 认
+        $clientPin = self::clientPinSha256($server);
+        if ($clientPin !== '') $uri .= "&pinSHA256={$clientPin}";
 
         if (isset($server['obfs']) && isset($server['obfs_password'])) {
             $obfs_password = rawurlencode($server['obfs_password']);
@@ -474,7 +574,7 @@ class Helper
             'allow_insecure' => $server['insecure'] ?? ($tlsSettings['allow_insecure'] ?? 0),
             'disable_sni' => $server['disable_sni'],
             'udp_relay_mode' => $server['udp_relay_mode'],
-            'pcs' => $tlsSettings['pinned_peer_cert_sha256'] ?? '',
+            'pcs' => self::pinnedCertSha256($server),
         ];
 
         $remote = self::formatHost($server['host']);
@@ -492,8 +592,11 @@ class Helper
             'type' => $server['network'] ?? 'tcp',
             'insecure' => $server['insecure'] ?? ($tlsSettings['allow_insecure'] ?? 0),
             'fp' => $tlsSettings['fingerprint'] ?? 'chrome',
-            'pcs' => $tlsSettings['pinned_peer_cert_sha256'] ?? '',
+            'pcs' => self::pinnedCertSha256($server),
         ];
+        // v3board：mihomo 解析 anytls 链接时读 hpkp（证书 SHA256 十六进制，与 pcs 同格式）
+        $clientPin = self::clientPinSha256($server);
+        if ($clientPin !== '') $config['hpkp'] = $clientPin;
         if (isset($server['server_name']) || isset($tlsSettings['server_name'])) {
             $config['sni'] = $server['server_name'] ?? ($tlsSettings['server_name'] ?? '');
         }

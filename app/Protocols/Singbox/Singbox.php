@@ -9,11 +9,14 @@ class Singbox
     private $servers;
     private $user;
     private $config;
+    // v3board：客户端版本号（从 UA 解析），决定能否下发 1.13 才有的字段
+    private $version;
 
     public function __construct($user, $servers, array $options = null)
     {
         $this->user = $user;
         $this->servers = $servers;
+        $this->version = $options['version'] ?? null;
     }
 
     public function handle()
@@ -50,6 +53,7 @@ class Singbox
             if ($item['type'] === 'v2node') {
                 $item['type'] = $item['protocol'];
             }
+            $built = count($proxies);
             switch ($item['type']) {
                 case 'shadowsocks':
                     $ssConfig = $this->buildShadowsocks($this->user['uuid'], $item);
@@ -84,6 +88,8 @@ class Singbox
                     $proxies[] = $hysteria2Config;
                     break;
             }
+            // v3board：补全 uTLS 指纹与自签证书公钥固定
+            if (count($proxies) > $built) Helper::applySingboxTls($proxies[count($proxies) - 1], $item, $this->version);
         }
     
         return $proxies;
