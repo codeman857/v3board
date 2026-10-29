@@ -180,6 +180,11 @@ class InsiderGuardService
                 $server['name'] = $decoy . ($renamed > 1 ? " {$renamed}" : '');
             }
             self::replaceHostDeep($server, $originals, $decoy, true);
+            // 自签证书的 pin / 证书不下发给被限制用户：证书全网唯一，拿去扫描平台可能反查到真实服务器；
+            // 自定义 ECH 的 ech_config 里明文带着 public_name，可能就是真实域名，一并去掉（各输出类没有 ech_config 时不输出 ECH）
+            if (isset($server['tls_settings']) && is_array($server['tls_settings'])) {
+                unset($server['tls_settings']['pinned_peer_cert_sha256'], $server['tls_settings']['tls_cert'], $server['tls_settings']['ech_config']);
+            }
         }
         unset($server);
     }
